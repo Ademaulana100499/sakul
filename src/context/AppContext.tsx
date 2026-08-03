@@ -27,23 +27,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [transactions, setTransactions] = useState<Transaction[]>(INITIAL_TRANSACTIONS);
   const [isClient, setIsClient] = useState(false);
 
-  // Load from localStorage on client init
+  // Load from localStorage on client init (Never persist login session)
   useEffect(() => {
     setIsClient(true);
     const savedUsers = localStorage.getItem('sakul_users');
     const savedItems = localStorage.getItem('sakul_items');
     const savedTrx = localStorage.getItem('sakul_trx');
-    const savedCurrentUserId = localStorage.getItem('sakul_current_user_id');
 
     if (savedUsers) setUsers(JSON.parse(savedUsers));
     if (savedItems) setItems(JSON.parse(savedItems));
     if (savedTrx) setTransactions(JSON.parse(savedTrx));
 
-    if (savedCurrentUserId) {
-      const allUsers = savedUsers ? JSON.parse(savedUsers) : INITIAL_USERS;
-      const found = allUsers.find((u: User) => u.id === savedCurrentUserId);
-      if (found) setCurrentUser(found);
-    }
+    // Clear any persistent user ID to require fresh login every refresh
+    localStorage.removeItem('sakul_current_user_id');
   }, []);
 
   // Sync to localStorage
@@ -69,7 +65,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const found = users.find(u => u.id === userId);
     if (found) {
       setCurrentUser(found);
-      localStorage.setItem('sakul_current_user_id', found.id);
     }
   };
 

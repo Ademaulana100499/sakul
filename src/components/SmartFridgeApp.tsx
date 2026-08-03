@@ -12,6 +12,11 @@ export default function SmartFridgeApp() {
   const [isDoorOpen, setIsDoorOpen] = useState(false);         // Stage 2: Physically Swung Open
   const [showAuthPrompt, setShowAuthPrompt] = useState(false); // Game HUD prompt when grabbing locked handle
   const [isHandPulling, setIsHandPulling] = useState(false);
+  const [enteredPin, setEnteredPin] = useState('');
+  const [pinError, setPinError] = useState(false);
+  const [isPinVerified, setIsPinVerified] = useState(false);   // Quest Step 1: PIN correct, need to find "Orang Ganteng"
+  const [isGantengFound, setIsGantengFound] = useState(false); // Quest Step 2: Found "Orang Ganteng", unlock fridge!
+  const [openTimeRemaining, setOpenTimeRemaining] = useState(60); // 60 seconds (1 minute max open time)
   
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [showEmployeeModal, setShowEmployeeModal] = useState(false);
@@ -35,9 +40,6 @@ export default function SmartFridgeApp() {
   const adminUser = users.find(u => u.role === 'superadmin');
   const user1 = users.find(u => u.id === 'user-1');
   const otherUsers = users.filter(u => u.role === 'user' && u.id !== 'user-1');
-
-  if (!isClient) return null;
-
   const employeeUsers = users.filter(u => u.role === 'user');
   const userTransactions = currentUser ? transactions.filter(t => t.userId === currentUser.id) : [];
 
@@ -64,10 +66,9 @@ export default function SmartFridgeApp() {
     return { bg: 'from-cyan-400 via-blue-300 to-sky-500', label: 'Ron 88' };
   };
 
-  // INTELLIGENT 3D HAND POSTURE LOGIC BASED ON USER INTERACTION CONTEXT
+  // INTELLIGENT 3D HAND POSTURE LOGIC
   const getHandCursorDetails = () => {
     if (showAuthPrompt || isHoveringButton) {
-      // Pushing buttons on HUD screen or UI controls -> Index finger pressing!
       return {
         icon: '👆',
         text: 'TEKAN',
@@ -77,7 +78,6 @@ export default function SmartFridgeApp() {
     }
     if (isHoveringHandle && !isDoorOpen) {
       if (isDoorUnlocked) {
-        // Handle is green -> Tight Grasping Fist ready to pull!
         return {
           icon: '✊',
           text: '🟢 TARIK GAGANG',
@@ -85,7 +85,6 @@ export default function SmartFridgeApp() {
           transform: 'translate(-50%, -50%) scale(1.25) rotate(-12deg)'
         };
       } else {
-        // Handle is red -> Reaching out to tap handle for credentials!
         return {
           icon: '🫴',
           text: '🔴 TARIK GAGANG',
@@ -95,7 +94,6 @@ export default function SmartFridgeApp() {
       }
     }
     if (isDoorOpen) {
-      // Inside fridge picking ice cold drink cans -> Grabbing downward hand
       return {
         icon: '👇',
         text: 'AMBIL MINUMAN',
@@ -103,7 +101,6 @@ export default function SmartFridgeApp() {
         transform: 'translate(-50%, -30%) scale(1.1)'
       };
     }
-    // Idle relaxed open palm flying around the showcase
     return {
       icon: '🖐️',
       text: '',
@@ -114,61 +111,184 @@ export default function SmartFridgeApp() {
 
   const cursorState = getHandCursorDetails();
 
-  // STEP 1 & STEP 3 (2-STAGE MECHANICS):
   const handleHandleClick = () => {
     if (isDoorOpen) return;
 
     if (!isDoorUnlocked) {
+      if (isPinVerified && !isGantengFound) {
+        setToastMessage({
+          text: '⚠️ GEMBOK TERTAHAN! PIN memang sudah benar, tapi kamu BELUM MENEMUKAN SI ORANG GANTENG yang ngintip di ruangan ini! Cari dulu! 👀',
+          type: 'error'
+        });
+        return;
+      }
       setShowAuthPrompt(true);
       return;
     }
 
     setIsHandPulling(true);
-    setToastMessage({
-      text: '✊ Tangan menarik daun pintu kaca pembuka...',
-      type: 'info'
-    });
 
     setTimeout(() => {
       setIsDoorOpen(true);
-      setToastMessage({
-        text: '🚪 Pintu Kulkas Terbuka Lebar! Silakan pilih minuman Anda.',
-        type: 'success'
-      });
       setTimeout(() => {
         setIsHandPulling(false);
-        setToastMessage(null);
       }, 1100);
     }, 450);
   };
 
-  // STEP 2: Credential Verified -> TURN SINGLE LED DOT FROM RED TO GREEN!
   const handleVerifyCredential = (userId: string) => {
     login(userId);
     setShowAuthPrompt(false);
-    setIsDoorUnlocked(true); // Switch LED point from RED to GREEN!
+    setEnteredPin('');
+    setIsPinVerified(true);
+    setIsDoorUnlocked(false); 
 
     const u = users.find(user => user.id === userId);
     setToastMessage({
-      text: `⚡ Verifikasi (${u?.name || 'User'}) OK! Titik LED berganti Hijau. Klik gagang pintu sekali lagi untuk menarik buka!`,
-      type: 'success'
+      text: `⚡ Verifikasi (${u?.name || 'User'}) OK! TAPI TUNGGU: Sebelum kulkas kebuka, CARI DULU ORANG GANTENG yang lagi ngintip di ruangan ini! 👀✨`,
+      type: 'info'
     });
-
-    setTimeout(() => {
-      setToastMessage(null);
-    }, 4000);
   };
+
+  const validatePinCode = (pin: string) => {
+    if (pin === '100499') {
+      const ade = users.find(u => u.id === 'user-1' || u.name.toLowerCase().includes('ade')) || users[0];
+      if (ade) {
+        login(ade.id);
+        setShowAuthPrompt(false);
+        setEnteredPin('');
+        setPinError(false);
+        setIsPinVerified(true);
+        setIsDoorUnlocked(false);
+        setToastMessage({
+          text: `🔥 ANJAY KODE SAKTI BENER! TAPI TUNGGU: Sebelum kulkas bisa dibuka, CARI & TEMUKAN DULU "ORANG GANTENG" yang lagi ngintip rahasia di ruangan ini! 👀✨`,
+          type: 'info'
+        });
+        return;
+      }
+    } else if (pin === '123456') {
+      const admin = users.find(u => u.role === 'superadmin') || users[1];
+      if (admin) {
+        login(admin.id);
+        setShowAuthPrompt(false);
+        setEnteredPin('');
+        setPinError(false);
+        setIsPinVerified(true);
+        setIsDoorUnlocked(false);
+        setToastMessage({
+          text: `👑 KODE VVIP BENAR! TAPI TUNGGU: Sebelum kulkas terbuka, CARI & TEMUKAN DULU "ORANG GANTENG" yang lagi ngintip di ruangan ini! 👀🤫`,
+          type: 'info'
+        });
+        return;
+      }
+    }
+
+    // Wrong pin!
+    setPinError(true);
+    setToastMessage({
+      text: '❌ KODE SALAH BOSKU! Alarm kulkas menjerit: "WOOOYY BUKAN KULKAS MOYANG LU! JANGAN ASAL TEBAK PIN!"',
+      type: 'error'
+    });
+    setTimeout(() => {
+      setEnteredPin('');
+      setPinError(false);
+    }, 1200);
+  };
+
+  const handleFindGanteng = () => {
+    if (isPinVerified && !isGantengFound) {
+      setIsGantengFound(true);
+      setIsDoorUnlocked(true);
+      setToastMessage({
+        text: '🎉 HORE! Si Orang Ganteng ketangkap basah! ("Yahh ketauannn 🤪"). 🟢 Gembok Kulkas resmi TERBUKA! Silakan tarik gagang pintu sekarang!',
+        type: 'success'
+      });
+    }
+  };
+
+  const handlePinDigit = (digit: string) => {
+    if (enteredPin.length < 6 && !pinError) {
+      const nextPin = enteredPin + digit;
+      setEnteredPin(nextPin);
+      if (nextPin.length === 6) {
+        setTimeout(() => validatePinCode(nextPin), 250);
+      }
+    }
+  };
+
+  const handlePinDelete = () => {
+    setEnteredPin(prev => prev.slice(0, -1));
+    setPinError(false);
+  };
+
+  const handlePinReset = () => {
+    setEnteredPin('');
+    setPinError(false);
+  };
+
+  // Listen to physical keyboard when auth keypad is open
+  useEffect(() => {
+    if (!showAuthPrompt) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key >= '0' && e.key <= '9') {
+        handlePinDigit(e.key);
+      } else if (e.key === 'Backspace') {
+        handlePinDelete();
+      } else if (e.key === 'Escape' || e.key === 'c' || e.key === 'C') {
+        handlePinReset();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showAuthPrompt, enteredPin, pinError]);
+
+  // 1-Minute Open Door Timer (Compressor Safety & Electricity Saving Alarm)
+  useEffect(() => {
+    if (!isDoorOpen) {
+      setOpenTimeRemaining(60);
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setOpenTimeRemaining((prev) => {
+        if (prev === 16) {
+          setToastMessage({
+            text: '⚠️ ALARM DARURAT: Sisa 15 detik! Cepetan ambil minum & tutup pintu kulkasnya! Kalau dibuka kelamaan kompresor bisa jebol mampus & boros listrik! ⚡🥶',
+            type: 'error'
+          });
+        }
+
+        if (prev <= 1) {
+          clearInterval(timer);
+          setIsDoorOpen(false);
+          setIsDoorUnlocked(false);
+          setIsPinVerified(false);
+          setIsGantengFound(false);
+          logout();
+          setToastMessage({
+            text: '🚨 BLAM! Pintu kulkas NGEREM DEPAR KETUTUP & TERKUNCI OTOMATIS! Waktu buka habis (1 menit)! "WOOYY JANGAN BUKAIN KULKAS LAMA-LAMA BUANG ANGIN FREON MAMPUS! BAYAR NO REKENING LISTRIK SANA!" 😤⚡',
+            type: 'error'
+          });
+          return 60;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [isDoorOpen, logout]);
 
   const handleCloseAndLock = () => {
     setIsDoorOpen(false);
     setIsDoorUnlocked(false);
+    setIsPinVerified(false);
+    setIsGantengFound(false);
     setTimeout(() => {
       logout();
       setToastMessage({
-        text: '🔒 Pintu Ditutup. Titik LED Kunci Magnetis Kembali Merah (Locked).',
+        text: '🔒 Pintu Kulkas Ditutup & Terkunci.',
         type: 'info'
       });
-      setTimeout(() => setToastMessage(null), 2500);
     }, 400);
   };
 
@@ -178,7 +298,6 @@ export default function SmartFridgeApp() {
         setShowAuthPrompt(true);
       } else {
         setToastMessage({ text: '🟢 Titik LED sudah Hijau! Klik gagang pintu kanan untuk menarik bukaan pintu kaca terlebih dahulu.', type: 'info' });
-        setTimeout(() => setToastMessage(null), 2500);
       }
       return;
     }
@@ -186,7 +305,6 @@ export default function SmartFridgeApp() {
     if (currentUser.role === 'superadmin') {
       updateStock(itemId, 1);
       setToastMessage({ text: '📦 (+1 pcs) Stok rak bertambah.', type: 'success' });
-      setTimeout(() => setToastMessage(null), 2000);
       return;
     }
 
@@ -195,11 +313,12 @@ export default function SmartFridgeApp() {
       text: res.message,
       type: res.success ? 'success' : 'error'
     });
-    setTimeout(() => setToastMessage(null), 3000);
   };
 
+  if (!isClient) return null;
+
   return (
-    <div className="h-screen w-screen bg-slate-950 p-2 sm:p-4 flex items-center justify-center font-sans select-none overflow-hidden relative cursor-none">
+    <div className="h-screen w-screen bg-stone-100 p-2 sm:p-4 flex items-center justify-center font-sans select-none overflow-hidden relative cursor-none">
       
       {/* ABSOLUTE GLOBAL CURSOR OVERRIDE - DESTROYS SYSTEM CURSOR ON EVERY BUTTON, INPUT & ELEMENT 100% */}
       <style dangerouslySetInnerHTML={{
@@ -229,38 +348,269 @@ export default function SmartFridgeApp() {
         )}
       </div>
 
-      {/* Dark Game Studio Backdrop */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-zinc-800 via-zinc-950 to-black pointer-events-none z-0"></div>
+      {/* =========================================================================================
+          DESKTOP BRIGHT WARM JAPANDI TECH OFFICE PANTRY & LOUNGE SIMULATION BACKGROUND
+          ========================================================================================= */}
+      <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden bg-gradient-to-b from-stone-100 via-amber-50/30 to-stone-200 flex flex-col justify-between">
+        
+        {/* Upper Wall: Warm Soft Beige & Timber Slats with Spotlights */}
+        <div className="flex-1 w-full bg-[linear-gradient(to_right,#e7e5e4_1px,transparent_1px)] bg-[size:4.5rem_100%] bg-stone-100/95 relative z-20 flex items-center justify-between px-6 md:px-12 lg:px-20 xl:px-32 pt-4">
+          
+          {/* Ceiling Warm Ambient Halo Lighting */}
+          <div className="absolute top-0 inset-x-0 h-96 bg-[radial-gradient(ellipse_at_top,rgba(251,191,36,0.18)_0%,transparent_70%)] pointer-events-none"></div>
+          
+          {/* TOP WALL DECORATIONS: CLOCK & BOXED TEAM PHOTO FRAME (HANGING HIGH ON WALL) */}
+          <div className="absolute top-4 inset-x-0 flex items-start justify-center space-x-12 xl:space-x-[520px] 2xl:space-x-[640px] pointer-events-none opacity-95 hidden md:flex">
+            
+            {/* Invisible spacer to keep right-side photo frame alignment intact */}
+            <div className="w-40 invisible pointer-events-none"></div>
 
-      {/* Toast Notification */}
-      <AnimatePresence>
-        {toastMessage && (
-          <motion.div 
-            initial={{ y: -30, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -20, opacity: 0 }}
-            className="fixed top-4 z-50 max-w-[360px] pointer-events-none"
-          >
-            <div className={`py-2 px-3 rounded-xl shadow-2xl backdrop-blur-xl border flex items-center space-x-2.5 ${
-              toastMessage.type === 'success'
-                ? 'bg-zinc-900 border-zinc-600 text-slate-200'
-                : toastMessage.type === 'error'
-                ? 'bg-rose-950/95 border-rose-400 text-rose-200'
-                : 'bg-zinc-900 border-zinc-700 text-cyan-300'
-            }`}>
-              <span className="text-base">
-                {toastMessage.type === 'success' ? '🟢' : toastMessage.type === 'error' ? '🔴' : '⚡'}
-              </span>
-              <div className="text-[11px] font-extrabold leading-tight">{toastMessage.text}</div>
+            {/* Boxed Brown Wooden Framed Team Photo (Pure Photo Frame without Text) */}
+            <div className="w-36 h-36 sm:w-44 sm:h-44 bg-amber-900 rounded-2xl p-2 shadow-[0_20px_45px_rgba(0,0,0,0.3)] border-[8px] border-amber-950 transform rotate-3 flex flex-col items-center justify-center pointer-events-auto">
+              <div className="w-full h-full rounded-lg bg-stone-100 p-1.5 shadow-inner border border-amber-950/40 overflow-hidden relative">
+                <img 
+                  src="/team.jpeg" 
+                  alt="Team SAKUL 2026" 
+                  className="w-full h-full object-cover object-center rounded transform hover:scale-105 transition-transform duration-500 shadow" 
+                />
+              </div>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+
+          {/* =========================================================================================
+              LEFT SIDE: CURTAINED SUNSET WINDOW OVER COFFEE BAR & MONSTERA PLANT (MOVED TO LEFT!)
+              ========================================================================================= */}
+          <div className="hidden lg:flex flex-col items-center w-[290px] xl:w-[330px] self-end mb-12 z-30 transform -rotate-1 origin-bottom-right ml-2 xl:ml-8 space-y-4">
+            
+            {/* 4-PANE FRENCH SUNSET WINDOW WITH CURTAIN ROD AND FABRIC DRAPES (NOW ON LEFT WALL!) */}
+            <div className="relative shrink-0 -mt-8">
+              {/* Full Width Dark Wooden Window Architrave Backdrop (Eliminates wall holes/gaps on left & right sides) */}
+              <div className="absolute -left-7 -right-7 -top-2 -bottom-2 bg-gradient-to-b from-amber-950 via-stone-900 to-amber-950 rounded-2xl shadow-xl -z-10 border-2 border-stone-800"></div>
+
+              {/* Top Curtain Rod */}
+              <div className="absolute -top-5 -left-8 -right-8 h-3.5 bg-stone-900 rounded-full shadow-[0_5px_15px_rgba(0,0,0,0.5)] z-40 border border-stone-700 flex items-center justify-between px-1">
+                <div className="w-2.5 h-2.5 bg-amber-500 rounded-full shadow"></div>
+                <div className="w-2.5 h-2.5 bg-amber-500 rounded-full shadow"></div>
+              </div>
+
+              {/* Left & Right Curtain Drapes */}
+              <div className="absolute -left-6 top-0 bottom-0 w-10 bg-gradient-to-r from-amber-950 via-amber-900 to-amber-800 rounded-bl-xl shadow-[15px_0_25px_rgba(0,0,0,0.4)] z-30 pointer-events-none border-l-4 border-amber-950 flex flex-col justify-center">
+                <div className="h-3.5 w-full bg-amber-400/80 shadow-lg mt-10 rounded-r-full border-y border-amber-600"></div>
+              </div>
+              <div className="absolute -right-6 top-0 bottom-0 w-10 bg-gradient-to-l from-amber-950 via-amber-900 to-amber-800 rounded-br-xl shadow-[-15px_0_25px_rgba(0,0,0,0.4)] z-30 pointer-events-none border-r-4 border-amber-950 flex flex-col justify-center">
+                <div className="h-3.5 w-full bg-amber-400/80 shadow-lg mt-10 rounded-l-full border-y border-amber-600"></div>
+              </div>
+
+              {/* Window Box */}
+              <div className="w-56 h-60 sm:h-64 rounded-2xl border-[10px] border-stone-800 bg-gradient-to-b from-sky-400 via-amber-300 to-orange-400 shadow-[0_25px_60px_rgba(0,0,0,0.35)] overflow-hidden relative flex flex-col justify-end p-2.5">
+                <div className="absolute top-3 right-3 text-3xl filter drop-shadow-[0_0_20px_#ffffff] animate-pulse z-10">☀️</div>
+                <div className="absolute inset-0 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:16px_16px] opacity-25"></div>
+
+                {/* Hilarious Ade Face Peeking from Outside the Window Glass! (Behind z-20 wooden divider grids) */}
+                <div 
+                  onMouseEnter={handleFindGanteng}
+                  onClick={handleFindGanteng}
+                  className={`absolute -bottom-[75px] sm:-bottom-[80px] -right-[70px] sm:-right-[78px] w-28 sm:w-32 group/ade transition-all duration-500 ease-out ${
+                    isGantengFound 
+                      ? '-translate-x-[62px] sm:-translate-x-[70px] -translate-y-[18px] !z-30 scale-105 pointer-events-auto' 
+                      : isPinVerified
+                      ? 'z-[15] pointer-events-auto cursor-pointer transform hover:scale-105 hover:-translate-x-[62px] sm:hover:-translate-x-[70px] hover:-translate-y-[18px] hover:z-30'
+                      : 'z-[15] pointer-events-none'
+                  }`}
+                  title={isPinVerified ? "Klik / Hover Si Ganteng untuk membuka gembok kulkas!" : "Orang ganteng mengawasi rahasia... 👀"}
+                >
+                  <img 
+                    src="/ade.png" 
+                    alt="Ade Peeking Outside Window in Sunset" 
+                    className={`w-full h-auto object-contain opacity-[0.88] filter drop-shadow-[0_12px_20px_rgba(120,53,15,0.65)] brightness-[0.78] contrast-[1.18] saturate-[1.85] sepia-[.45] hue-rotate-[-15deg] transition-all duration-500 transform ${
+                      isGantengFound ? '-rotate-[25deg]' : '-rotate-[35deg] group-hover/ade:-rotate-[25deg]'
+                    }`}
+                  />
+                  <div className={`absolute -top-2 left-0 right-0 transition-opacity bg-slate-950/95 text-amber-300 text-[10px] sm:text-[10.5px] font-black py-1.5 px-2 rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.8)] text-center pointer-events-none border-[1.5px] border-amber-400 font-mono tracking-tight ${
+                    isGantengFound ? 'opacity-100 animate-bounce' : isPinVerified ? 'opacity-0 group-hover/ade:opacity-100' : 'opacity-0'
+                  }`}>
+                    Yahh ketauannn 🤪
+                  </div>
+                </div>
+
+                <div className="absolute inset-x-0 top-1/2 -mt-1.5 h-3 bg-stone-800 z-20 pointer-events-none shadow-md border-y border-stone-700"></div>
+                <div className="absolute inset-y-0 left-1/2 -ml-1.5 w-3 bg-stone-800 z-20 pointer-events-none shadow-md border-x border-stone-700"></div>
+                
+                <div className="absolute top-2.5 left-2 z-30 font-black text-stone-900 text-xs flex items-center space-x-1.5 bg-white/95 py-1 px-2 rounded-xl backdrop-blur-md shadow-xl border border-stone-300 max-w-[140px] pointer-events-none">
+                  <span className="text-sm shrink-0">🌅</span>
+                  <div className="truncate">
+                    <div className="text-[6px] text-stone-600 uppercase font-mono tracking-wider font-extrabold leading-none">EXTERIOR VIEW</div>
+                    <div className="text-[9.5px] text-stone-950 uppercase font-black tracking-tight leading-none mt-0.5 truncate">Jakarta Sunset</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Light Oak Timber Pantry Bar Table Under Window */}
+            <div className="relative w-full">
+              <div className="bg-gradient-to-t from-amber-900 via-amber-800 to-amber-700 h-16 w-full rounded-t-xl border-t-4 border-amber-300 shadow-[0_15px_30px_rgba(0,0,0,0.25)] flex items-end justify-between px-5 pb-2">
+                <div className="flex items-center space-x-2.5 mb-0.5">
+                  <span className="text-3xl filter drop-shadow animate-bounce" title="Mesin Espresso">☕</span>
+                  <span className="text-2xl filter drop-shadow" title="Stoples Camilan">🍪</span>
+                  <span className="text-3xl filter drop-shadow" title="Biskuit">🥨</span>
+                </div>
+                <div className="text-right">
+                  <span className="bg-emerald-900/90 text-emerald-300 border border-emerald-400 text-[8px] font-black px-2 py-0.5 rounded-full uppercase font-mono shadow block">
+                    📶 WiFi: Office_Fast5G
+                  </span>
+                </div>
+              </div>
+              <div className="h-8 bg-stone-800 w-full shadow-[0_20px_40px_rgba(0,0,0,0.4)] border-b border-stone-950"></div>
+            </div>
+            
+            {/* Monstera Floor Plant */}
+            <div className="absolute -right-8 sm:-right-10 -bottom-14 sm:-bottom-16 translate-y-2 text-7xl sm:text-8xl filter drop-shadow-[0_15px_15px_rgba(0,0,0,0.35)] opacity-95 pointer-events-none z-50">
+              🪴
+            </div>
+          </div>
+
+          {/* =========================================================================================
+              RIGHT SIDE: ANALOG WALL CLOCK & WOODEN CORKBOARD (GIVES WIDE CLEARANCE FROM REFRIGERATOR!)
+              ========================================================================================= */}
+          <div className="hidden lg:flex flex-col items-center self-center mt-0 sm:mt-2 z-0 transform rotate-1 origin-bottom-left ml-auto mr-0 xl:mr-0 translate-x-10 sm:translate-x-12 xl:translate-x-14 space-y-4">
+            
+            {/* REALISTIC 3D ROUND ANALOG WALL CLOCK (SET TO 17:00 QUITTING TIME) */}
+            <div className="flex flex-col items-end self-end -mt-8 sm:-mt-12 -translate-y-4 sm:-translate-y-5 mr-6 sm:mr-8 xl:mr-10 translate-x-4 sm:translate-x-6 shrink-0">
+              {/* Outer clock frame & face */}
+              <div className="w-28 h-28 sm:w-32 sm:h-32 xl:w-36 xl:h-36 rounded-full bg-slate-950 border-[6px] sm:border-[8px] border-stone-800 shadow-[0_15px_35px_rgba(0,0,0,0.5)] p-1 relative flex items-center justify-center transform hover:scale-105 transition-transform duration-300">
+                <div className="w-full h-full rounded-full bg-[#f8f6f0] shadow-[inset_0_4px_12px_rgba(0,0,0,0.25)] border border-stone-300 relative flex items-center justify-center font-serif text-stone-900 font-black">
+                  {/* Dial numbers */}
+                  <span className="absolute top-1 text-xs sm:text-sm">12</span>
+                  <span className="absolute bottom-1 text-xs sm:text-sm">6</span>
+                  <span className="absolute left-2 text-xs sm:text-sm">9</span>
+                  <span className="absolute right-2 text-xs sm:text-sm">3</span>
+                  
+                  {/* Brand mark inside face */}
+                  <span className="absolute top-[20px] sm:top-[22px] xl:top-[25px] text-[7.5px] sm:text-[8.5px] xl:text-[9.5px] font-sans tracking-tight text-red-700 uppercase font-black leading-tight text-center z-0">Waktu Kritis<br/>Pulang</span>
+
+                  {/* Clock Hands showing 17:00 (5 PM) */}
+                  <div className="absolute bottom-1/2 left-1/2 -translate-x-1/2 w-1.5 sm:w-2 h-8 sm:h-10 xl:h-11 bg-stone-950 rounded-t-full origin-bottom z-10 shadow-sm"></div>
+                  <div className="absolute bottom-1/2 left-1/2 -translate-x-1/2 w-2 sm:w-2.5 h-6 sm:h-7 xl:h-8 bg-amber-800 rounded-t-full origin-bottom rotate-[150deg] z-20 shadow-sm"></div>
+                  
+                  {/* Animated spinning red second hand with quartz tick-tick steps */}
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20" style={{ animation: 'spin 15s steps(60, end) infinite' }}>
+                    <div className="w-0.5 sm:w-1 h-[44%] bg-rose-600 rounded-t-full -translate-y-1/2 shadow-xs"></div>
+                  </div>
+                  
+                  {/* Center cap dot */}
+                  <div className="w-3 h-3 rounded-full bg-amber-600 border-[1.5px] border-stone-900 shadow z-30"></div>
+                </div>
+              </div>
+            </div>
+
+            {/* THE WOODEN CORKBOARD OF WHOLESOME EMPLOYEE VIBE NOTES */}
+            <div className="w-[310px] xl:w-[360px] bg-amber-900/90 rounded-2xl p-2.5 shadow-[0_25px_65px_rgba(0,0,0,0.3)] border-[8px] border-amber-950 text-stone-900 font-sans transform -rotate-1 relative shrink-0 mt-6 sm:mt-8 xl:mt-10">
+              <div className="bg-[#cd9a5b] bg-[radial-gradient(#b88647_1px,transparent_1px)] [background-size:10px_10px] rounded-lg p-2.5 shadow-inner flex flex-col space-y-2">
+                
+                <div className="bg-stone-900 text-amber-300 font-black px-2 py-1 rounded text-[9px] uppercase tracking-widest text-center shadow-md border border-amber-400/50 flex items-center justify-center space-x-1">
+                  <span>📌 PAPAN CURHAT & CATATAN PEGAWAI</span>
+                  <span className="animate-bounce">🥤</span>
+                </div>
+
+                {/* Grid of colorful wholesome & entertaining workplace sticky notes */}
+                <div className="grid grid-cols-2 gap-2 text-[8.5px] sm:text-[9px] font-black leading-tight">
+                  
+                  {/* Sticky 1 */}
+                  <div className="bg-amber-200 p-2.5 rounded shadow-md border-b-2 border-r-2 border-amber-400 transform -rotate-2 text-stone-900 relative flex items-center justify-center text-center">
+                    <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 text-[10px]">📌</span>
+                    <p className="italic text-amber-950">"Kerja ikhlas, cair lekas, revisian tuntas, hatiku bebas! ✨😎"</p>
+                  </div>
+
+                  {/* Sticky 2 */}
+                  <div className="bg-emerald-200 p-2.5 rounded shadow-md border-b-2 border-r-2 border-emerald-400 transform rotate-2 text-stone-900 relative flex items-center justify-center text-center">
+                    <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 text-[10px]">📌</span>
+                    <p className="italic text-emerald-950">"Pengen resign... tapi pas ngeliat keranjang Shopee, langsung nggak jadi 🛒🥲."</p>
+                  </div>
+
+                  {/* Sticky 3 */}
+                  <div className="bg-rose-200 p-2.5 rounded shadow-md border-b-2 border-r-2 border-rose-400 transform rotate-1 text-stone-900 relative flex items-center justify-center text-center">
+                    <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 text-[10px]">📌</span>
+                    <p className="italic text-rose-950">"Jam 08.00 semangat, jam 12.00 pudar, jam 15.00 mampir bengong 🫠☕."</p>
+                  </div>
+
+                  {/* Sticky 4 */}
+                  <div className="bg-cyan-200 p-2.5 rounded shadow-md border-b-2 border-r-2 border-cyan-400 transform -rotate-1 text-stone-900 relative flex items-center justify-center text-center">
+                    <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 text-[10px]">📌</span>
+                    <p className="italic text-cyan-950">"Capek gapapa, yang penting cicilan paylater lunas tepat pada waktunya 💪🥹."</p>
+                  </div>
+
+                  {/* Sticky 5 */}
+                  <div className="bg-purple-200 p-2.5 rounded shadow-md border-b-2 border-r-2 border-purple-400 transform rotate-2 text-stone-900 col-span-2 relative flex items-center justify-center text-center">
+                    <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 text-[10px]">📌</span>
+                    <p className="italic text-purple-950">"Mental boleh gemetar, tapi performa wajib gahar! Ingat: Capek kerja itu cuma sementara, tapi miskin & banyak cicilan itu SANGAT BERBAHAYA! 🗿💀🔥"</p>
+                  </div>
+
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Lower Floor: Bright Light Oak Scandinavian Wood Flooring */}
+        <div className="h-[22%] sm:h-[25%] w-full bg-[repeating-linear-gradient(90deg,#d6d3d1,#d6d3d1_110px,#c7c2be_110px,#c7c2be_112px)] bg-stone-300 relative shadow-[inset_0_15px_40px_rgba(0,0,0,0.2)] border-t-4 border-stone-400">
+          {/* Baseboard Plinth Molding separating Wall and Floor */}
+          <div className="absolute top-0 inset-x-0 h-5 bg-gradient-to-b from-stone-200 via-stone-300 to-stone-400 border-b border-stone-500 shadow-md"></div>
+          {/* Floor Reflection Light from Fridge */}
+          <div className="absolute top-5 inset-x-0 h-28 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.6)_0%,transparent_65%)]"></div>
+        </div>
+      </div>
+
+      {/* Toast Notification (Dead Center of Screen for Arcade Game HUD Feel) */}
+      <div className="fixed inset-0 z-[60] flex items-center justify-center px-4 pointer-events-none">
+        <AnimatePresence>
+          {toastMessage && (
+            <motion.div 
+              initial={{ scale: 0.65, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.65, opacity: 0 }}
+              transition={{ type: 'spring', damping: 16, stiffness: 280 }}
+              className={`max-w-[480px] w-auto py-4 px-5 rounded-3xl backdrop-blur-2xl border-[3px] flex flex-col space-y-3 text-left pointer-events-auto shadow-2xl ${
+                toastMessage.type === 'success'
+                  ? 'bg-zinc-950 border-emerald-400 text-emerald-200 shadow-emerald-500/20'
+                  : toastMessage.type === 'error'
+                  ? 'bg-rose-950 border-rose-500 text-rose-200 shadow-rose-500/20'
+                  : 'bg-zinc-950 border-amber-400 text-amber-200 shadow-amber-500/20'
+              }`}
+            >
+              <div className="flex items-center space-x-3.5">
+                <span className="text-3xl sm:text-4xl shrink-0 filter drop-shadow animate-pulse">
+                  {toastMessage.type === 'success' ? '🎉' : toastMessage.type === 'error' ? '🚨' : '⚡'}
+                </span>
+                <div className="text-xs sm:text-[13.5px] font-black leading-snug text-white tracking-tight flex-1">{toastMessage.text}</div>
+              </div>
+              <div className="flex justify-end pt-1 border-t border-white/10">
+                <button
+                  onClick={() => setToastMessage(null)}
+                  onMouseEnter={() => setIsHoveringButton(true)}
+                  onMouseLeave={() => setIsHoveringButton(false)}
+                  className={`px-5 py-1.5 rounded-2xl font-black text-xs uppercase tracking-wider shadow-lg transition-transform active:scale-95 border flex items-center space-x-1.5 cursor-pointer ${
+                    toastMessage.type === 'success'
+                      ? 'bg-emerald-400 text-zinc-950 hover:bg-emerald-300 border-emerald-200 shadow-emerald-500/30'
+                      : toastMessage.type === 'error'
+                      ? 'bg-rose-500 text-white hover:bg-rose-400 border-rose-300 shadow-rose-600/30'
+                      : 'bg-amber-400 text-zinc-950 hover:bg-amber-300 border-amber-200 shadow-amber-500/30'
+                  }`}
+                >
+                  <span>OK</span>
+                  <span>👍</span>
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       {/* =========================================================================================
-          MASTER MOBILE-DEDICATED 3D COMMERCIAL COOLER (FIXED MAX-W-[380PX])
+          MASTER MOBILE-DEDICATED 3D COMMERCIAL COOLER (FIXED MAX-W-[380PX]) - STANDS OUT IN BRIGHT ROOM!
           ========================================================================================= */}
-      <div className="w-full max-w-[370px] sm:max-w-[380px] h-[770px] sm:h-[820px] max-h-[96vh] rounded-[26px] bg-zinc-950 border-[12px] sm:border-[14px] border-zinc-900 shadow-[0_30px_100px_rgba(0,0,0,0.95)] relative overflow-hidden flex flex-col z-10 mx-auto group">
+      <div className="w-full max-w-[370px] sm:max-w-[380px] h-[770px] sm:h-[820px] max-h-[96vh] rounded-[26px] bg-zinc-950 border-[12px] sm:border-[14px] border-zinc-900 shadow-[0_35px_90px_rgba(0,0,0,0.65),0_0_60px_rgba(251,191,36,0.12)] relative overflow-hidden flex flex-col z-10 mx-auto group">
         
         {/* 1. TOP WHITE ILLUMINATED LIGHTBOX SIGN (ALWAYS STATIC & UNCOVERED BY DOOR!) */}
         <div className="bg-zinc-950 p-2 shrink-0 border-b-[6px] border-zinc-900 z-40">
@@ -276,8 +626,20 @@ export default function SmartFridgeApp() {
                 </p>
               </div>
             </div>
-            <div className="bg-zinc-950 text-cyan-300 px-2 py-0.5 rounded font-mono text-[10px] font-black shrink-0 border border-zinc-700">
-              02.0°C
+            <div className="flex items-center space-x-1.5 shrink-0">
+              {isDoorOpen && (
+                <div className={`px-2 py-0.5 rounded font-mono text-[9px] font-black border flex items-center space-x-1 shadow-md ${
+                  openTimeRemaining <= 15
+                    ? 'bg-rose-950 text-rose-300 border-rose-500 animate-pulse'
+                    : 'bg-amber-950 text-amber-300 border-amber-400'
+                }`}>
+                  <span>⏳ BUKA:</span>
+                  <span className="text-white text-[10px]">{openTimeRemaining}d</span>
+                </div>
+              )}
+              <div className="bg-zinc-950 text-cyan-300 px-2 py-0.5 rounded font-mono text-[10px] font-black shrink-0 border border-zinc-700">
+                02.0°C
+              </div>
             </div>
           </div>
         </div>
@@ -290,6 +652,20 @@ export default function SmartFridgeApp() {
           <main className="flex-1 relative bg-gradient-to-b from-slate-100 via-white to-slate-200 px-2.5 py-2 flex flex-col justify-between overflow-y-auto overflow-x-hidden min-h-0 shadow-[inset_0_0_45px_rgba(0,0,0,0.2)]">
             
             <div className="absolute top-0 inset-x-0 h-5 bg-gradient-to-b from-white to-transparent shadow-[0_4px_20px_#ffffff] pointer-events-none z-0"></div>
+
+            {isDoorOpen && (
+              <div className={`mb-2 px-2 py-1 rounded-lg border flex items-center justify-between text-[8.5px] sm:text-[9.5px] font-black shrink-0 relative z-20 shadow ${
+                openTimeRemaining <= 15 ? 'bg-rose-600 text-white border-rose-400 animate-bounce' : 'bg-amber-100 text-amber-950 border-amber-400'
+              }`}>
+                <span className="flex items-center space-x-1.5 truncate">
+                  <span>{openTimeRemaining <= 15 ? '🚨' : '⚠️'}</span>
+                  <span className="truncate">Bahaya buka kulkas kelamaan (max 1 menit), kompresor cepat jebol!</span>
+                </span>
+                <span className="font-mono px-1.5 py-0.5 rounded bg-black/90 text-amber-300 text-[10px] font-black shrink-0 ml-1 shadow-inner">
+                  Sisa: {openTimeRemaining} dtk
+                </span>
+              </div>
+            )}
 
             {/* TOP USER / ADMIN CONTROL STATUS INSIDE THE FRIDGE */}
             {currentUser?.role === 'superadmin' && isDoorOpen ? (
@@ -520,7 +896,7 @@ export default function SmartFridgeApp() {
 
 
         {/* =========================================================================================
-            6. GAME WORLD SECURITY HUD PROMPT (NO BACKDROP / NO SCREEN DARKENING! JUST THE CARD!)
+            6. GAME WORLD SECURITY KEYPAD VAULT (6-DIGIT PIN CODE LOCK)
             ========================================================================================= */}
         <AnimatePresence>
           {showAuthPrompt && (
@@ -531,99 +907,71 @@ export default function SmartFridgeApp() {
               transition={{ type: 'spring', damping: 18 }}
               className="absolute inset-0 z-50 flex items-center justify-center p-3 pointer-events-none"
             >
-              {/* Game HUD Dialog Card */}
-              <div className="pointer-events-auto w-full max-w-[310px] bg-slate-950/95 border-2 border-cyan-400 rounded-2xl p-4 shadow-[0_25px_80px_rgba(0,0,0,0.95),0_0_40px_rgba(34,211,238,0.35)] text-white space-y-3 relative backdrop-blur-2xl">
+              {/* Game HUD Digital Vault Keypad Card (Super Compact, Hilarious, No Cheat Sheet) */}
+              <div className="pointer-events-auto w-full max-w-[250px] bg-slate-950/95 border-2 border-cyan-400 rounded-3xl p-3.5 shadow-[0_25px_80px_rgba(0,0,0,0.95),0_0_40px_rgba(34,211,238,0.4)] text-white space-y-2 relative backdrop-blur-2xl text-center">
                 
                 <button 
-                  onClick={() => setShowAuthPrompt(false)}
+                  onClick={() => { setShowAuthPrompt(false); setEnteredPin(''); }}
                   onMouseEnter={() => setIsHoveringButton(true)}
                   onMouseLeave={() => setIsHoveringButton(false)}
-                  className="absolute right-3 top-3 text-slate-400 hover:text-white text-xs font-bold"
+                  className="absolute right-2.5 top-2.5 text-slate-400 hover:text-white text-[11px] font-black bg-zinc-900 border border-zinc-700 w-6 h-6 rounded-full flex items-center justify-center transition-colors"
+                  title="Tutup"
                 >
-                  ✕ BATAL
+                  ✕
                 </button>
 
-                <div className="flex items-center space-x-2 text-cyan-400 border-b border-zinc-800 pb-2">
-                  <span className="text-xl">🛡️</span>
-                  <div className="pr-4">
-                    <div className="text-[9px] font-mono font-black tracking-widest uppercase">SAKUL SECURITY HUD</div>
-                    <div className="text-xs font-black text-white">VERIFIKASI AKSES BUKA PINTU</div>
+                <div className="text-center pt-0.5 px-1 border-b border-zinc-800/80 pb-2">
+                  <div className="text-[9px] font-mono font-black tracking-widest text-cyan-400 uppercase">🛡️ ANTI-MALING CAMILAN</div>
+                  <div className="text-[13px] font-black text-white leading-tight mt-0.5 tracking-tight">KULKAS DIGEMBOK DUKUN!</div>
+                </div>
+
+                <p className="text-[10px] text-zinc-300 font-extrabold leading-tight px-1 italic pt-0.5">
+                  "Ketik 6 digit PIN tanggal lahirmu! Jangan cuma inget deadline & utang pinjol!"
+                </p>
+
+                {/* 6-Digit Phosphor Display Screen */}
+                <div className={`py-2 px-1.5 rounded-2xl border font-mono flex items-center justify-center shadow-inner transition-all ${
+                  pinError 
+                    ? 'bg-rose-950/90 border-rose-500 animate-bounce text-rose-200 shadow-[0_0_15px_#f43f5e]' 
+                    : 'bg-zinc-950 border-cyan-400 text-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.25)]'
+                }`}>
+                  <div className="flex items-center space-x-1.5 justify-center">
+                    {[0, 1, 2, 3, 4, 5].map((idx) => {
+                      const char = enteredPin[idx];
+                      return (
+                        <div key={idx} className={`w-7 h-9 rounded-xl flex items-center justify-center text-base font-black border transition-all ${
+                          char ? 'bg-cyan-900/80 border-cyan-300 text-white shadow-[0_0_8px_#22d3ee] scale-105' : 'bg-zinc-900 border-zinc-800 text-zinc-600'
+                        }`}>
+                          {char ? '★' : '•'}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
-                <p className="text-[11px] text-zinc-300 font-medium leading-relaxed">
-                  Gagang dipegang! Pilih akun kredensial Anda untuk mengubah titik LED magnetik dari <strong className="text-rose-400">🔴 Merah (Locked)</strong> menjadi <strong className="text-emerald-400">🟢 Hijau (Ready)</strong>:
-                </p>
-
-                <div className="space-y-2 pt-1">
-                  {user1 && (
+                {/* Numeric Keypad Grid (Super Compact & Punchy) */}
+                <div className="grid grid-cols-3 gap-1.5 pt-1">
+                  {['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '⌫'].map((btn) => (
                     <button
-                      onClick={() => handleVerifyCredential(user1.id)}
+                      key={btn}
+                      onClick={() => {
+                        if (btn === 'C') handlePinReset();
+                        else if (btn === '⌫') handlePinDelete();
+                        else handlePinDigit(btn);
+                      }}
                       onMouseEnter={() => setIsHoveringButton(true)}
                       onMouseLeave={() => setIsHoveringButton(false)}
-                      className="w-full p-2.5 rounded-xl bg-gradient-to-r from-cyan-950 via-slate-900 to-slate-900 hover:bg-slate-800 border border-cyan-400 flex items-center justify-between transition-all shadow-lg active:scale-95 group"
+                      className={`h-10 rounded-xl font-mono font-black text-base transition-all active:scale-90 shadow-md flex items-center justify-center border ${
+                        btn === 'C'
+                          ? 'bg-rose-900/90 hover:bg-rose-800 border-rose-500 text-rose-200 text-xs'
+                          : btn === '⌫'
+                          ? 'bg-amber-800/90 hover:bg-amber-700 border-amber-500 text-amber-200 text-xs'
+                          : 'bg-slate-900 hover:bg-slate-800 border-zinc-700 text-cyan-300 hover:border-cyan-400'
+                      }`}
                     >
-                      <div className="text-left truncate pr-2">
-                        <div className="text-[8px] uppercase font-black text-cyan-400">User 1 • Pegawai</div>
-                        <div className="text-xs font-black text-white truncate">{user1.name}</div>
-                      </div>
-                      <div className="text-right shrink-0 flex items-center space-x-1.5">
-                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981] inline-block"></span>
-                        <span className="text-[10px] font-black bg-zinc-900 border border-zinc-700 text-white px-2 py-1 rounded font-mono">
-                          AKSES 🟢
-                        </span>
-                      </div>
+                      {btn}
                     </button>
-                  )}
-
-                  {adminUser && (
-                    <button
-                      onClick={() => handleVerifyCredential(adminUser.id)}
-                      onMouseEnter={() => setIsHoveringButton(true)}
-                      onMouseLeave={() => setIsHoveringButton(false)}
-                      className="w-full p-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-amber-400 flex items-center justify-between transition-all active:scale-95 text-left"
-                    >
-                      <div>
-                        <div className="text-[8px] uppercase font-black text-amber-400">👑 Super Admin</div>
-                        <div className="text-[11px] font-black text-white">{adminUser.name}</div>
-                      </div>
-                      <span className="text-[9px] font-black bg-zinc-900 border border-amber-400 text-amber-300 px-2 py-0.5 rounded shadow font-mono flex items-center space-x-1">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                        <span>AKSES 🟢</span>
-                      </span>
-                    </button>
-                  )}
-                </div>
-
-                <div className="pt-1.5 border-t border-zinc-800">
-                  <button
-                    onClick={() => setShowEmployeeModal(!showEmployeeModal)}
-                    onMouseEnter={() => setIsHoveringButton(true)}
-                    onMouseLeave={() => setIsHoveringButton(false)}
-                    className="w-full text-center text-[10px] font-black text-cyan-400 hover:text-cyan-300 py-0.5"
-                  >
-                    <span>{showEmployeeModal ? '▲ Tutup Daftar' : '👥 ▼ Buka Sebagai Pegawai Lainnya'}</span>
-                  </button>
-
-                  {showEmployeeModal && (
-                    <div className="mt-1.5 p-1 bg-black rounded-xl border border-zinc-800 max-h-32 overflow-y-auto">
-                      <select
-                        onChange={(e) => {
-                          if (e.target.value) handleVerifyCredential(e.target.value);
-                        }}
-                        onMouseEnter={() => setIsHoveringButton(true)}
-                        onMouseLeave={() => setIsHoveringButton(false)}
-                        className="w-full bg-zinc-900 border border-zinc-700 text-white text-[10px] font-bold rounded p-1.5 focus:outline-none focus:border-cyan-400"
-                      >
-                        <option value="">-- Rekan Kantor (14 Pegawai) --</option>
-                        {otherUsers.map(u => (
-                          <option key={u.id} value={u.id}>
-                            {u.name} (Sisa Rp {u.currentBalance.toLocaleString('id-ID')})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
+                  ))}
                 </div>
               </div>
             </motion.div>
@@ -663,6 +1011,36 @@ export default function SmartFridgeApp() {
         </AnimatePresence>
 
       </div>
+
+      {/* =========================================================================================
+          8. MOBILE-ONLY ORANG GANTENG PEEKING FROM BOTTOM RIGHT CORNER OF SCREEN!
+          ========================================================================================= */}
+      <div 
+        onMouseEnter={handleFindGanteng}
+        onClick={handleFindGanteng}
+        className={`lg:hidden fixed -bottom-[65px] -right-[74px] w-28 sm:w-32 group/ade transition-all duration-500 ease-out ${
+          isGantengFound 
+            ? '-translate-x-[36px] -translate-y-[22px] z-50 pointer-events-auto' 
+            : isPinVerified
+            ? 'z-40 pointer-events-auto cursor-pointer transform hover:-translate-x-[36px] hover:-translate-y-[22px] active:-translate-x-[36px] active:-translate-y-[22px]'
+            : 'z-40 pointer-events-none'
+        }`}
+        title={isPinVerified ? "Klik / Tap Si Ganteng untuk membuka gembok kulkas!" : "Orang ganteng mengawasi dari pojok bawah... 👀"}
+      >
+        <img 
+          src="/ade.png" 
+          alt="Ade Peeking Mobile Bottom Corner" 
+          className={`w-full h-auto object-contain opacity-[0.9] filter drop-shadow-[-6px_0_15px_rgba(0,0,0,0.65)] transition-all duration-500 transform ${
+            isGantengFound ? '-rotate-[30deg]' : '-rotate-[40deg] group-hover/ade:-rotate-[30deg]'
+          }`}
+        />
+        <div className={`absolute -top-3 right-[24px] w-[135px] transition-opacity bg-slate-950/95 text-amber-300 text-[9.5px] font-black py-1 px-1.5 rounded-lg shadow-[0_5px_20px_rgba(0,0,0,0.8)] text-center pointer-events-none border border-amber-400 font-mono tracking-tight ${
+          isGantengFound ? 'opacity-100 animate-bounce' : isPinVerified ? 'opacity-0 group-hover/ade:opacity-100' : 'opacity-0'
+        }`}>
+          Yahh ketauannn 🤪
+        </div>
+      </div>
+
     </div>
   );
 }
