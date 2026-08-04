@@ -773,26 +773,12 @@ export default function SmartFridgeApp() {
             ========================================================================================= */}
         <div className="flex-1 relative overflow-hidden flex flex-col min-h-0 [perspective:1400px]">
           
-          <main className="flex-1 relative bg-gradient-to-b from-slate-100 via-white to-slate-200 px-2.5 py-2 flex flex-col justify-between overflow-y-auto overflow-x-hidden min-h-0 shadow-[inset_0_0_45px_rgba(0,0,0,0.2)]">
+          <main className="flex-1 relative bg-gradient-to-b from-slate-100 via-white to-slate-200 px-2.5 py-2 flex flex-col justify-start space-y-1.5 overflow-y-auto overflow-x-hidden min-h-0 shadow-[inset_0_0_45px_rgba(0,0,0,0.2)]">
             
             <div className="absolute top-0 inset-x-0 h-5 bg-gradient-to-b from-white to-transparent shadow-[0_4px_20px_#ffffff] pointer-events-none z-0"></div>
 
-            {isDoorOpen && (
-              <div className={`mb-2 px-2 py-1 rounded-lg border flex items-center justify-between text-[8.5px] sm:text-[9.5px] font-black shrink-0 relative z-20 shadow ${
-                openTimeRemaining <= 15 ? 'bg-rose-600 text-white border-rose-400 animate-bounce' : 'bg-amber-100 text-amber-950 border-amber-400'
-              }`}>
-                <span className="flex items-center space-x-1.5 truncate">
-                  <span>{openTimeRemaining <= 15 ? '🚨' : '⚠️'}</span>
-                  <span className="truncate">Bahaya buka kulkas kelamaan (max 1 menit), kompresor cepat jebol!</span>
-                </span>
-                <span className="font-mono px-1.5 py-0.5 rounded bg-black/90 text-amber-300 text-[10px] font-black shrink-0 ml-1 shadow-inner">
-                  Sisa: {openTimeRemaining} dtk
-                </span>
-              </div>
-            )}
-
             {/* TOP USER / ADMIN CONTROL STATUS INSIDE THE FRIDGE */}
-            {currentUser?.role === 'superadmin' && isDoorOpen ? (
+            {currentUser?.role === 'superadmin' ? (
               <div className="flex-1 flex flex-col space-y-2 relative z-10 overflow-hidden text-[10px]">
                 <div className="bg-zinc-950 text-white p-2 rounded-lg border border-amber-400 shadow flex items-center justify-between shrink-0">
                   <span className="font-black text-amber-400 truncate">👑 Admin: {currentUser.name} (+1 Stok)</span>
@@ -844,9 +830,9 @@ export default function SmartFridgeApp() {
                 )}
               </div>
             ) : (
-              <div className="relative z-10 mb-1 flex items-center justify-between gap-1.5 bg-zinc-900 text-white px-2 py-1.5 rounded-lg border border-zinc-700 shadow shrink-0">
-                {currentUser && isDoorOpen ? (
-                  <div className="flex items-center justify-between w-full gap-1.5 overflow-hidden">
+              <div className="relative z-10 w-full h-11 sm:h-12 flex items-center justify-between gap-1.5 bg-zinc-900 text-white px-2 sm:px-2.5 rounded-lg border border-zinc-700 shadow shrink-0">
+                {currentUser ? (
+                  <div className="flex items-center justify-between w-full h-full gap-1.5 overflow-hidden">
                     <div className="flex items-center space-x-1.5 overflow-hidden">
                       <div className="w-6 h-6 rounded bg-zinc-800 border border-zinc-600 text-white font-black text-xs flex items-center justify-center shrink-0">{currentUser.avatar}</div>
                       <div className="truncate">
@@ -866,9 +852,24 @@ export default function SmartFridgeApp() {
                     </div>
                   </div>
                 ) : (
-                  <div className="w-full flex items-center justify-between text-slate-200 px-1 text-[9px]">
-                    <span className="font-black flex items-center space-x-1"><span className="animate-pulse text-emerald-400">⚡</span><span>CHILLER ACTIVE (13 VARIAN MINUMAN)</span></span>
-                    <span className="text-[7px] text-emerald-700 font-black bg-emerald-100 px-1.5 py-0.5 rounded">STOK SIAP</span>
+                  <div className="flex items-center justify-between w-full h-full gap-1.5 overflow-hidden">
+                    <div className="flex items-center space-x-1.5 overflow-hidden">
+                      <div className="w-6 h-6 rounded bg-zinc-800 border border-zinc-600 text-amber-300 font-black text-xs flex items-center justify-center shrink-0">⚡</div>
+                      <div className="truncate">
+                        <span className="text-[7px] text-emerald-400 font-black uppercase flex items-center space-x-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>
+                          <span>CHILLER ACTIVE</span>
+                        </span>
+                        <h2 className="text-[10px] font-black text-white truncate">13 Varian Minuman Dingin</h2>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-1 bg-black/80 px-2 py-0.5 rounded border border-zinc-700 shrink-0">
+                      <div className="text-right text-[8px]">
+                        <div className="text-cyan-400 font-bold">Saldo:</div>
+                        <div className="text-[10px] font-black text-white leading-none">Rp 70.000</div>
+                      </div>
+                      <div className="px-1.5 py-1 rounded bg-zinc-700 text-slate-300 font-black text-[8px] shrink-0 border border-zinc-600 shadow-inner">STOK SIAP</div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -880,7 +881,7 @@ export default function SmartFridgeApp() {
             <div className="flex-1 flex flex-col justify-between space-y-2 relative z-10 min-h-0 py-1 overflow-y-auto">
               {shelves.map((shelf, sIdx) => (
                 <div key={sIdx} className="w-full">
-                  <div className="flex items-end justify-center space-x-1.5 px-0.5 pb-0">
+                  <div className="flex items-end justify-center space-x-1.5 px-0.5 pb-1">
                     {shelf.items.map(item => {
                       const hasStock = item.stock > 0;
                       const canAfford = currentUser ? currentUser.currentBalance >= item.price : false;
@@ -889,14 +890,16 @@ export default function SmartFridgeApp() {
                       return (
                         <div
                           key={item.id}
-                          className="flex flex-col items-center flex-1 max-w-[78px] relative"
+                          className="flex flex-col items-center flex-1 max-w-[78px] relative pt-2 sm:pt-2.5"
                         >
-                          {/* Stock Floating Badge (Static & steady on wire rack) */}
-                          <span className={`text-[6.5px] font-black px-1.5 py-0.2 rounded-full mb-0.5 shadow-sm ${
-                            hasStock ? 'bg-zinc-900 border border-zinc-700 text-white' : 'bg-rose-600 border border-rose-400 text-white font-bold animate-pulse'
-                          }`}>
-                            {hasStock ? `${item.stock} pcs` : '0 ❌'}
-                          </span>
+                          {/* Stock Floating Corner Badge (Placed at absolute top-right so it NEVER covers the bottle cap!) */}
+                          <div className="absolute top-0 right-0 z-50 pointer-events-none">
+                            <span className={`text-[5.5px] font-black px-1.5 py-[1px] rounded-full shadow-md block leading-none ${
+                              hasStock ? 'bg-slate-900 border border-slate-600 text-cyan-300' : 'bg-rose-700 border border-rose-400 text-white font-bold animate-pulse'
+                            }`}>
+                              {hasStock ? `${item.stock} pcs` : '0 ❌'}
+                            </span>
+                          </div>
 
                           {/* IDENTICAL 3D WEBGL BOTTLE / CAN ON THE SHELF */}
                           {/* ONLY THIS SPECIFIC PRODUCT REACTS TO HOVER ("hanya di hover per produk saja") */}
@@ -907,18 +910,18 @@ export default function SmartFridgeApp() {
                             onMouseEnter={() => setIsHoveringButton(true)}
                             onMouseLeave={() => setIsHoveringButton(false)}
                             className={`w-full flex items-center justify-center transition-all duration-200 ${
-                              isDoorOpen ? 'cursor-pointer hover:scale-125 hover:-translate-y-2 active:scale-95 z-40 hover:drop-shadow-[0_10px_20px_rgba(6,182,212,0.8)]' : 'opacity-85'
+                              isDoorOpen ? 'cursor-pointer hover:scale-115 hover:-translate-y-2 active:scale-95 z-10 hover:z-20 hover:drop-shadow-[0_10px_20px_rgba(6,182,212,0.8)]' : 'opacity-85 z-10'
                             }`}
                             title={isDoorOpen ? `Klik untuk inspeksi 3D: ${item.name}` : 'Buka pintu kulkas terlebih dahulu'}
                           >
                             <ShelfItem3D item={item} />
                           </div>
 
-                          {/* PETITE OVERLAPPING SHELF PRICE TAG (HANGS OVER THE BOTTLE BASE LIKE A REAL GROCERY SHELF) */}
+                          {/* ULTRA-COMPACT CLAMPED MINIMARKET SHELF PRICE TAG (-mt-4.5 & z-[60] GUARANTEES IT STAYS AT THE VERY FRONT OF THE BOTTLES!) */}
                           {/* COMPLETELY STATIC ON THE WIRE RACK - DOES NOT MOVE OR SHAKE WHEN BOTTLE IS HOVERED! */}
-                          <div className="-mt-3 sm:-mt-3.5 w-[76%] max-w-[48px] bg-[#ffea00] border border-amber-600 rounded-[2.5px] shadow-[0_2px_6px_rgba(0,0,0,0.35)] overflow-hidden text-center flex flex-col relative z-20 transition-transform">
+                          <div className="-mt-4.5 w-[76%] max-w-[50px] bg-[#ffea00] border border-amber-600 rounded-[2.5px] shadow-[0_3px_8px_rgba(0,0,0,0.4)] overflow-hidden text-center flex flex-col relative z-[60] pointer-events-none">
                             {/* Slim Red Promo Header Strip */}
-                            <div className="bg-red-600 text-white font-black text-[4px] uppercase tracking-tighter py-0 leading-none border-b border-red-800">
+                            <div className="bg-red-600 text-white font-black text-[4.5px] uppercase tracking-tighter py-[0.5px] leading-none border-b border-red-800">
                               ★ PROMO ★
                             </div>
                             
@@ -928,19 +931,17 @@ export default function SmartFridgeApp() {
                             </div>
                             
                             {/* Price Box */}
-                            <div className="bg-white/95 mx-[1.5px] my-[1px] px-0.5 py-[1px] rounded-[1.5px] border border-amber-400 flex items-center justify-center shadow-inner">
-                              <span className="text-[4px] mr-0.5 font-extrabold text-red-600">Rp</span>
-                              <span className="text-[6.5px] sm:text-[7px] font-black text-slate-950 tracking-tight leading-none">
+                            <div className="bg-white/95 mx-[1.5px] my-[1.5px] px-1 py-[1.5px] rounded-[1.5px] border border-amber-400 flex items-center justify-center shadow-inner">
+                              <span className="text-[4.5px] mr-[2px] font-extrabold text-red-600">Rp</span>
+                              <span className="text-[7px] font-black text-slate-950 tracking-tight leading-none">
                                 {(item.price).toLocaleString('id-ID')}
                               </span>
                             </div>
 
-                            {/* Status Badge overlay when closed or can't afford */}
-                            {(!isDoorOpen || !hasStock || (!canAfford && currentUser?.role !== 'superadmin')) && (
-                              <div className={`absolute inset-0 flex items-center justify-center text-[5px] font-black p-0.5 uppercase tracking-tighter text-center ${
-                                !isDoorOpen ? 'bg-zinc-900/95 text-amber-300' : !hasStock ? 'bg-rose-700/95 text-white' : 'bg-orange-600/95 text-white'
-                              }`}>
-                                {!isDoorOpen ? '🔒 LOCKED' : !hasStock ? '❌ HABIS' : '❌ SALDO KURANG'}
+                            {/* Status Badge overlay ONLY when item is out of stock ("HABIS") */}
+                            {!hasStock && (
+                              <div className="absolute inset-0 flex items-center justify-center text-[5.5px] font-black p-0.5 uppercase tracking-tighter text-center bg-rose-700/95 text-white">
+                                ❌ HABIS
                               </div>
                             )}
                           </div>

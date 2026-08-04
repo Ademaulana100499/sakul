@@ -275,15 +275,16 @@ export function ShelfItem3D({ item }: { item: Item }) {
   }
 
   return (
-    <div className="w-16 h-19 sm:w-19 sm:h-22 relative flex items-center justify-center pointer-events-none">
-      <Canvas camera={{ position: [0, 0.0, 2.2], fov: 44 }} style={{ pointerEvents: 'none' }}>
+    <div className="w-14 h-17 sm:w-16 sm:h-20 relative flex items-center justify-center pointer-events-none">
+      <Canvas camera={{ position: [0, 0.15, 3.8], fov: 36 }} style={{ pointerEvents: 'none' }}>
         <ambientLight intensity={2.8} />
         <directionalLight position={[5, 8, 6]} intensity={3.5} />
         <directionalLight position={[-4, -2, -3]} intensity={1.8} color="#38bdf8" />
         <directionalLight position={[0, -3, 3]} intensity={1.5} color="#ffffff" />
         
-        <Float speed={1.8} rotationIntensity={0.1} floatIntensity={0.12}>
-          <group scale={[1.65, 1.65, 1.65]} position={[0, 0.03, 0]}>
+        {/* Very subtle float intensity so bottle feels solidly grounded resting on the wire shelf! */}
+        <Float speed={1.2} rotationIntensity={0.1} floatIntensity={0.04}>
+          <group position={[0, -0.15, 0]}>
             <DrinkMesh3D item={item} isMini={true} />
           </group>
         </Float>
@@ -359,10 +360,10 @@ export default function ItemInspector3DModal({ item, currentUser, onClose, onTak
 
       {/* BOTTOM FLOATING ACTION CONTROLLER: "AMBIL INI ATAU GK DEH" */}
       <div className="z-20 mb-2 sm:mb-6 flex flex-col items-center w-full max-w-xl pointer-events-auto shrink-0">
-        <div className="flex items-center justify-between w-full text-xs sm:text-sm font-bold text-slate-200 bg-slate-900/85 backdrop-blur-md px-6 py-2 rounded-full border border-slate-700 shadow-xl mb-3">
-          <span>📦 Stok Rak Kulkas: <strong className="text-white font-black text-sm sm:text-base">{item.stock} pcs</strong></span>
+        <div className="flex items-center justify-between w-full text-xs sm:text-sm font-bold text-slate-200 bg-slate-900/85 backdrop-blur-md px-6 py-2.5 rounded-full border border-slate-700 shadow-xl mb-3">
+          <span>📦 Stok Rak: <strong className="text-white font-black text-sm sm:text-base">{item.stock} pcs</strong></span>
           {currentUser && (
-            <span>💰 Saldo Anda: <strong className="text-emerald-400 font-black text-sm sm:text-base">Rp {currentUser.currentBalance.toLocaleString('id-ID')}</strong></span>
+            <span>💰 Saldo Anda: <strong className={`font-black text-sm sm:text-base ${!canAfford && !isSuperAdmin ? 'text-rose-400 font-extrabold animate-pulse' : 'text-emerald-400'}`}>Rp {currentUser.currentBalance.toLocaleString('id-ID')} {!isSuperAdmin && (!canAfford ? '(❌ Kurang)' : '(✅ Cukup)')}</strong></span>
           )}
         </div>
 
@@ -380,16 +381,16 @@ export default function ItemInspector3DModal({ item, currentUser, onClose, onTak
           <button
             disabled={!hasStock || (!canAfford && !isSuperAdmin)}
             onClick={onTake}
-            className={`font-black py-3.5 sm:py-5 px-6 rounded-2xl shadow-2xl transition-all duration-200 transform active:scale-95 flex items-center justify-center space-x-2 sm:space-x-3 text-base sm:text-2xl uppercase tracking-wider border-2 hover:scale-105 cursor-pointer ${
+            className={`font-black py-3.5 sm:py-5 px-4 rounded-2xl shadow-2xl transition-all duration-200 transform active:scale-95 flex items-center justify-center space-x-2 sm:space-x-3 text-base sm:text-2xl uppercase tracking-wider border-2 hover:scale-105 cursor-pointer ${
               !hasStock 
-                ? 'bg-rose-950 text-rose-400 border-rose-800 opacity-60 cursor-not-allowed'
+                ? 'bg-rose-950 text-rose-300 border-rose-600 opacity-85 cursor-not-allowed'
                 : !canAfford && !isSuperAdmin
-                ? 'bg-amber-950 text-amber-400 border-amber-800 opacity-60 cursor-not-allowed'
+                ? 'bg-amber-950 text-amber-300 border-amber-500 opacity-90 cursor-not-allowed shadow-[0_0_20px_rgba(245,158,11,0.4)]'
                 : 'bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-600 hover:from-emerald-400 hover:to-teal-300 text-zinc-950 border-emerald-200 shadow-[0_0_45px_rgba(16,185,129,0.75)]'
             }`}
           >
             <span className="text-xl sm:text-3xl">
-              {isSuperAdmin ? '📦' : !hasStock ? '❌' : !canAfford ? '❌' : '🤤'}
+              {isSuperAdmin ? '📦' : !hasStock ? '❌' : !canAfford ? '🚫' : '🤤'}
             </span>
             <span>
               {isSuperAdmin ? '+1 Stok Item' : !hasStock ? 'Stok Habis' : !canAfford ? 'Saldo Kurang' : 'Ambil Ini!'}
