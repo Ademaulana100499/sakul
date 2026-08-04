@@ -354,15 +354,18 @@ export default function SmartFridgeApp() {
       <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden bg-gradient-to-b from-stone-100 via-amber-50/30 to-stone-200 flex flex-col justify-between">
         
         {/* Upper Wall: Warm Soft Beige & Timber Slats with Spotlights */}
-        <div className="flex-1 w-full bg-[linear-gradient(to_right,#e7e5e4_1px,transparent_1px)] bg-[size:4.5rem_100%] bg-stone-100/95 relative z-20 flex items-center justify-between px-6 md:px-12 lg:px-20 xl:px-32 pt-4">
+        <div className="flex-1 w-full bg-[linear-gradient(to_right,#e7e5e4_1px,transparent_1px)] bg-[size:4.5rem_100%] bg-stone-100/95 relative z-20 flex justify-center">
           
           {/* Ceiling Warm Ambient Halo Lighting */}
           <div className="absolute top-0 inset-x-0 h-96 bg-[radial-gradient(ellipse_at_top,rgba(251,191,36,0.18)_0%,transparent_70%)] pointer-events-none"></div>
           
-          {/* TOP WALL DECORATIONS: CLOCK & BOXED TEAM PHOTO FRAME (HANGING HIGH ON WALL) */}
-          <div className="absolute top-4 inset-x-0 flex items-start justify-center space-x-12 xl:space-x-[520px] 2xl:space-x-[640px] pointer-events-none opacity-95 hidden md:flex">
+          {/* STAGED STUDIO VIEWPORT WRAPPER: Clamps wall decorations to max-w-[1360px] so layout never breaks on giant widescreen monitors! */}
+          <div className="w-full max-w-[1360px] h-full flex items-center justify-between px-4 sm:px-8 xl:px-12 pt-4 relative">
             
-            {/* Invisible spacer to keep right-side photo frame alignment intact */}
+            {/* TOP WALL DECORATIONS: CLOCK & BOXED TEAM PHOTO FRAME (HANGING HIGH ON WALL) */}
+            <div className="absolute top-4 inset-x-0 flex items-start justify-center space-x-12 xl:space-x-[520px] pointer-events-none opacity-95 hidden md:flex">
+              
+              {/* Invisible spacer to keep right-side photo frame alignment intact */}
             <div className="w-40 invisible pointer-events-none"></div>
 
             {/* Boxed Brown Wooden Framed Team Photo (Pure Photo Frame without Text) */}
@@ -380,7 +383,7 @@ export default function SmartFridgeApp() {
           {/* =========================================================================================
               LEFT SIDE: CURTAINED SUNSET WINDOW OVER COFFEE BAR & MONSTERA PLANT (MOVED TO LEFT!)
               ========================================================================================= */}
-          <div className="hidden lg:flex flex-col items-center w-[290px] xl:w-[330px] self-end mb-12 z-30 transform -rotate-1 origin-bottom-right ml-2 xl:ml-8 space-y-4">
+          <div className="hidden lg:flex flex-col items-center w-[290px] xl:w-[330px] self-center -mt-16 sm:-mt-20 relative z-30 transform -rotate-1 origin-bottom-right ml-2 xl:ml-8 space-y-4">
             
             {/* 4-PANE FRENCH SUNSET WINDOW WITH CURTAIN ROD AND FABRIC DRAPES (NOW ON LEFT WALL!) */}
             <div className="relative shrink-0 -mt-8">
@@ -402,7 +405,7 @@ export default function SmartFridgeApp() {
               </div>
 
               {/* Window Box */}
-              <div className="w-56 h-60 sm:h-64 rounded-2xl border-[10px] border-stone-800 bg-gradient-to-b from-sky-400 via-amber-300 to-orange-400 shadow-[0_25px_60px_rgba(0,0,0,0.35)] overflow-hidden relative flex flex-col justify-end p-2.5">
+              <div className="w-64 h-[365px] sm:h-[380px] rounded-2xl border-[10px] border-stone-800 bg-gradient-to-b from-sky-400 via-amber-300 to-orange-400 shadow-[0_25px_60px_rgba(0,0,0,0.35)] overflow-hidden relative flex flex-col justify-end p-2.5">
                 <div className="absolute top-3 right-3 text-3xl filter drop-shadow-[0_0_20px_#ffffff] animate-pulse z-10">☀️</div>
                 <div className="absolute inset-0 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:16px_16px] opacity-25"></div>
 
@@ -446,25 +449,35 @@ export default function SmartFridgeApp() {
               </div>
             </div>
 
-            {/* Light Oak Timber Pantry Bar Table Under Window */}
-            <div className="relative w-full">
-              <div className="bg-gradient-to-t from-amber-900 via-amber-800 to-amber-700 h-16 w-full rounded-t-xl border-t-4 border-amber-300 shadow-[0_15px_30px_rgba(0,0,0,0.25)] flex items-end justify-between px-5 pb-2">
-                <div className="flex items-center space-x-2.5 mb-0.5">
-                  <span className="text-3xl filter drop-shadow animate-bounce" title="Mesin Espresso">☕</span>
-                  <span className="text-2xl filter drop-shadow" title="Stoples Camilan">🍪</span>
-                  <span className="text-3xl filter drop-shadow" title="Biskuit">🥨</span>
-                </div>
-                <div className="text-right">
-                  <span className="bg-emerald-900/90 text-emerald-300 border border-emerald-400 text-[8px] font-black px-2 py-0.5 rounded-full uppercase font-mono shadow block">
-                    📶 WiFi: Office_Fast5G
-                  </span>
-                </div>
+            {/* FLOOR DECORATION 1: SCANDINAVIAN TIMBER SIDE TABLE WITH BLOOMING FLOWER VASE (MEJA VAS BUNGA) */}
+            <div className="absolute left-0 sm:left-2 -bottom-40 sm:-bottom-48 translate-y-6 sm:translate-y-8 z-40 flex flex-col items-center select-none group/vase pointer-events-auto">
+              {/* Blooming Floral Arrangement Bouquet */}
+              <div className="text-4xl sm:text-5xl filter drop-shadow-[0_8px_12px_rgba(0,0,0,0.3)] z-30 -mb-2 transform group-hover/vase:scale-110 group-hover/vase:-translate-y-1 transition-transform duration-300 cursor-pointer" title="Vas Bunga Cantik Penghias Pantry 🌸">
+                💐
               </div>
-              <div className="h-8 bg-stone-800 w-full shadow-[0_20px_40px_rgba(0,0,0,0.4)] border-b border-stone-950"></div>
+              {/* Glossy Ceramic Flower Vase */}
+              <div className="w-9 sm:w-10 h-11 sm:h-12 bg-gradient-to-b from-stone-100 via-white to-stone-300 rounded-b-2xl rounded-t-lg border-2 border-stone-400 shadow-[0_8px_15px_rgba(0,0,0,0.35)] relative z-20 overflow-hidden flex items-center justify-center">
+                <div className="absolute top-2 left-1 w-2 h-6 bg-white/60 rounded-full blur-[1px]"></div>
+                <div className="w-full h-2 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 absolute top-1.5 opacity-90 border-y border-amber-700"></div>
+              </div>
+              
+              {/* Solid Oak Round Tabletop */}
+              <div className="w-24 sm:w-28 h-5 sm:h-6 bg-gradient-to-r from-amber-900 via-amber-700 to-amber-900 rounded-xl border-2 border-stone-800 shadow-[0_12px_22px_rgba(0,0,0,0.45)] z-10 -mt-1 relative flex items-center justify-center">
+                <div className="w-4 h-1 bg-white/20 rounded-full"></div>
+              </div>
+
+              {/* Angled Scandi Wooden Legs */}
+              <div className="flex justify-between w-16 sm:w-20 -mt-1 relative z-0">
+                <div className="w-3 sm:w-3.5 h-24 sm:h-28 bg-gradient-to-b from-amber-950 via-amber-900 to-stone-900 transform rotate-12 rounded-b-lg border-x border-stone-800 shadow-md"></div>
+                <div className="w-3 sm:w-3.5 h-24 sm:h-28 bg-gradient-to-b from-amber-950 via-amber-900 to-stone-950 transform -rotate-12 rounded-b-lg border-x border-stone-800 shadow-md"></div>
+              </div>
+
+              {/* Floor Shadow Beneath Table */}
+              <div className="w-24 sm:w-28 h-3.5 bg-black/40 rounded-full blur-sm -mt-1.5 z-0"></div>
             </div>
-            
-            {/* Monstera Floor Plant */}
-            <div className="absolute -right-8 sm:-right-10 -bottom-14 sm:-bottom-16 translate-y-2 text-7xl sm:text-8xl filter drop-shadow-[0_15px_15px_rgba(0,0,0,0.35)] opacity-95 pointer-events-none z-50">
+
+            {/* FLOOR DECORATION 2: MONSTERA FLOOR PLANT (ADJUSTED TO REST PERFECTLY ON WOOD FLOOR!) */}
+            <div className="absolute -right-2 sm:-right-6 -bottom-40 sm:-bottom-48 translate-y-8 text-7xl sm:text-8xl filter drop-shadow-[0_15px_18px_rgba(0,0,0,0.4)] opacity-95 pointer-events-none z-50 transform hover:scale-105 transition-transform">
               🪴
             </div>
           </div>
@@ -472,10 +485,10 @@ export default function SmartFridgeApp() {
           {/* =========================================================================================
               RIGHT SIDE: ANALOG WALL CLOCK & WOODEN CORKBOARD (GIVES WIDE CLEARANCE FROM REFRIGERATOR!)
               ========================================================================================= */}
-          <div className="hidden lg:flex flex-col items-center self-center mt-0 sm:mt-2 z-0 transform rotate-1 origin-bottom-left ml-auto mr-0 xl:mr-0 translate-x-10 sm:translate-x-12 xl:translate-x-14 space-y-4">
+          <div className="hidden lg:flex flex-col items-center self-center relative mt-0 sm:mt-2 z-30 transform rotate-1 origin-bottom-left ml-auto mr-0 xl:mr-0 translate-x-10 sm:translate-x-12 xl:translate-x-14 space-y-4">
             
             {/* REALISTIC 3D ROUND ANALOG WALL CLOCK (SET TO 17:00 QUITTING TIME) */}
-            <div className="flex flex-col items-end self-end -mt-8 sm:-mt-12 -translate-y-4 sm:-translate-y-5 mr-6 sm:mr-8 xl:mr-10 translate-x-4 sm:translate-x-6 shrink-0">
+            <div className="flex flex-col items-end self-end -mt-10 sm:-mt-14 -translate-y-8 sm:-translate-y-10 xl:-translate-y-12 mr-6 sm:mr-8 xl:mr-10 translate-x-4 sm:translate-x-6 shrink-0">
               {/* Outer clock frame & face */}
               <div className="w-28 h-28 sm:w-32 sm:h-32 xl:w-36 xl:h-36 rounded-full bg-slate-950 border-[6px] sm:border-[8px] border-stone-800 shadow-[0_15px_35px_rgba(0,0,0,0.5)] p-1 relative flex items-center justify-center transform hover:scale-105 transition-transform duration-300">
                 <div className="w-full h-full rounded-full bg-[#f8f6f0] shadow-[inset_0_4px_12px_rgba(0,0,0,0.25)] border border-stone-300 relative flex items-center justify-center font-serif text-stone-900 font-black">
@@ -504,44 +517,44 @@ export default function SmartFridgeApp() {
             </div>
 
             {/* THE WOODEN CORKBOARD OF WHOLESOME EMPLOYEE VIBE NOTES */}
-            <div className="w-[310px] xl:w-[360px] bg-amber-900/90 rounded-2xl p-2.5 shadow-[0_25px_65px_rgba(0,0,0,0.3)] border-[8px] border-amber-950 text-stone-900 font-sans transform -rotate-1 relative shrink-0 mt-6 sm:mt-8 xl:mt-10">
-              <div className="bg-[#cd9a5b] bg-[radial-gradient(#b88647_1px,transparent_1px)] [background-size:10px_10px] rounded-lg p-2.5 shadow-inner flex flex-col space-y-2">
+            <div className="w-[275px] xl:w-[315px] bg-amber-900/90 rounded-2xl p-2 shadow-[0_25px_65px_rgba(0,0,0,0.3)] border-[6px] border-amber-950 text-stone-900 font-sans transform -rotate-1 relative shrink-0 mt-2 sm:mt-3 xl:mt-4 -translate-x-4 sm:-translate-x-5 -translate-y-6 sm:-translate-y-8">
+              <div className="bg-[#cd9a5b] bg-[radial-gradient(#b88647_1px,transparent_1px)] [background-size:10px_10px] rounded-lg p-2 shadow-inner flex flex-col space-y-1.5">
                 
-                <div className="bg-stone-900 text-amber-300 font-black px-2 py-1 rounded text-[9px] uppercase tracking-widest text-center shadow-md border border-amber-400/50 flex items-center justify-center space-x-1">
-                  <span>📌 PAPAN CURHAT & CATATAN PEGAWAI</span>
+                <div className="bg-stone-900 text-amber-300 font-black px-2 py-1 rounded text-[8px] sm:text-[8.5px] uppercase tracking-widest text-center shadow-md border border-amber-400/50 flex items-center justify-center space-x-1">
+                  <span>📌 PAPAN CURHAT PEGAWAI</span>
                   <span className="animate-bounce">🥤</span>
                 </div>
 
                 {/* Grid of colorful wholesome & entertaining workplace sticky notes */}
-                <div className="grid grid-cols-2 gap-2 text-[8.5px] sm:text-[9px] font-black leading-tight">
+                <div className="grid grid-cols-2 gap-1.5 text-[7.5px] sm:text-[8px] font-black leading-tight">
                   
                   {/* Sticky 1 */}
-                  <div className="bg-amber-200 p-2.5 rounded shadow-md border-b-2 border-r-2 border-amber-400 transform -rotate-2 text-stone-900 relative flex items-center justify-center text-center">
-                    <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 text-[10px]">📌</span>
+                  <div className="bg-amber-200 p-2 rounded shadow-md border-b-2 border-r-2 border-amber-400 transform -rotate-2 text-stone-900 relative flex items-center justify-center text-center">
+                    <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 text-[9px]">📌</span>
                     <p className="italic text-amber-950">"Kerja ikhlas, cair lekas, revisian tuntas, hatiku bebas! ✨😎"</p>
                   </div>
 
                   {/* Sticky 2 */}
-                  <div className="bg-emerald-200 p-2.5 rounded shadow-md border-b-2 border-r-2 border-emerald-400 transform rotate-2 text-stone-900 relative flex items-center justify-center text-center">
-                    <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 text-[10px]">📌</span>
+                  <div className="bg-emerald-200 p-2 rounded shadow-md border-b-2 border-r-2 border-emerald-400 transform rotate-2 text-stone-900 relative flex items-center justify-center text-center">
+                    <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 text-[9px]">📌</span>
                     <p className="italic text-emerald-950">"Pengen resign... tapi pas ngeliat keranjang Shopee, langsung nggak jadi 🛒🥲."</p>
                   </div>
 
                   {/* Sticky 3 */}
-                  <div className="bg-rose-200 p-2.5 rounded shadow-md border-b-2 border-r-2 border-rose-400 transform rotate-1 text-stone-900 relative flex items-center justify-center text-center">
-                    <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 text-[10px]">📌</span>
+                  <div className="bg-rose-200 p-2 rounded shadow-md border-b-2 border-r-2 border-rose-400 transform rotate-1 text-stone-900 relative flex items-center justify-center text-center">
+                    <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 text-[9px]">📌</span>
                     <p className="italic text-rose-950">"Jam 08.00 semangat, jam 12.00 pudar, jam 15.00 mampir bengong 🫠☕."</p>
                   </div>
 
                   {/* Sticky 4 */}
-                  <div className="bg-cyan-200 p-2.5 rounded shadow-md border-b-2 border-r-2 border-cyan-400 transform -rotate-1 text-stone-900 relative flex items-center justify-center text-center">
-                    <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 text-[10px]">📌</span>
+                  <div className="bg-cyan-200 p-2 rounded shadow-md border-b-2 border-r-2 border-cyan-400 transform -rotate-1 text-stone-900 relative flex items-center justify-center text-center">
+                    <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 text-[9px]">📌</span>
                     <p className="italic text-cyan-950">"Capek gapapa, yang penting cicilan paylater lunas tepat pada waktunya 💪🥹."</p>
                   </div>
 
                   {/* Sticky 5 */}
-                  <div className="bg-purple-200 p-2.5 rounded shadow-md border-b-2 border-r-2 border-purple-400 transform rotate-2 text-stone-900 col-span-2 relative flex items-center justify-center text-center">
-                    <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 text-[10px]">📌</span>
+                  <div className="bg-purple-200 p-2 rounded shadow-md border-b-2 border-r-2 border-purple-400 transform rotate-2 text-stone-900 col-span-2 relative flex items-center justify-center text-center">
+                    <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 text-[9px]">📌</span>
                     <p className="italic text-purple-950">"Mental boleh gemetar, tapi performa wajib gahar! Ingat: Capek kerja itu cuma sementara, tapi miskin & banyak cicilan itu SANGAT BERBAHAYA! 🗿💀🔥"</p>
                   </div>
 
@@ -550,15 +563,80 @@ export default function SmartFridgeApp() {
               </div>
             </div>
 
+            {/* INTERACTIVE SOLID OFFICE PEDAL TRASH BIN (ABSOLUTE POSITIONED TO KEEP CLOCK & CORKBOARD AT ORIGINAL HEIGHT!) */}
+            <div 
+              className="absolute -left-14 sm:-left-24 xl:-left-28 -bottom-32 sm:-bottom-36 translate-y-6 sm:translate-y-8 z-50 transform -rotate-2 pointer-events-auto cursor-pointer group/bin select-none" 
+              title="Arahkan kursor / hover untuk membuka tutup tempat sampah!"
+            >
+              <div className="relative flex flex-col items-center w-24 sm:w-28 xl:w-[122px]">
+                
+                {/* 1. HINGED LID (Flips open on hover!) */}
+                <div className="w-[102px] sm:w-[118px] xl:w-[128px] h-8 sm:h-9 bg-gradient-to-b from-stone-300 via-stone-400 to-stone-600 rounded-t-2xl border-4 border-stone-700 shadow-[0_8px_15px_rgba(0,0,0,0.4)] z-30 flex flex-col items-center justify-start relative transform origin-bottom-left transition-all duration-500 ease-out group-hover/bin:-rotate-[65deg] group-hover/bin:-translate-y-7 group-hover/bin:-translate-x-3.5 group-hover/bin:shadow-[0_15px_30px_rgba(0,0,0,0.5)]">
+                  {/* Handle on Lid */}
+                  <div className="w-10 h-2.5 bg-gradient-to-r from-stone-500 via-stone-300 to-stone-500 rounded-full border border-stone-600 shadow-sm mt-1"></div>
+                  {/* Shiny rim light */}
+                  <div className="absolute top-3.5 inset-x-3 h-0.5 bg-white/40 rounded-full"></div>
+                </div>
+
+                {/* SURPRISE ARIF POP-UP OUT OF TRASH BIN WHEN HOVERED! 🗿🤣 */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 translate-y-12 sm:translate-y-16 w-32 sm:w-36 xl:w-[160px] z-[15] opacity-0 scale-[0.7] pointer-events-none transition-all duration-500 delay-75 ease-out group-hover/bin:opacity-100 group-hover/bin:-translate-y-[44px] sm:group-hover/bin:-translate-y-[50px] xl:group-hover/bin:-translate-y-[58px] group-hover/bin:scale-105 group-hover/bin:rotate-[2deg] flex flex-col items-center justify-end">
+                  {/* Fun Surprise Speech Bubble */}
+                  <div className="bg-amber-300 text-stone-950 font-mono font-black text-[8.5px] sm:text-[9.5px] xl:text-[10.5px] px-2.5 py-0.5 rounded-full shadow-lg border-[1.5px] border-stone-900 -mb-2 z-30 whitespace-nowrap transform -rotate-6 animate-bounce">
+                    Wakwaw! 🤪
+                  </div>
+                  {/* Arif Character Illustration Cutout Poking Head Out */}
+                  <img 
+                    src="/arif.png" 
+                    alt="Arif Surprise Pop" 
+                    className="w-full h-auto max-h-36 sm:max-h-40 xl:max-h-44 object-contain filter drop-shadow-[0_12px_22px_rgba(0,0,0,0.85)] shrink-0" 
+                  />
+                </div>
+
+                {/* 2. OPEN INNER BIN HOLE (Clean empty interior without paper balls!) */}
+                <div className="w-24 sm:w-28 xl:w-[122px] h-6 sm:h-7 bg-stone-950 rounded-t-lg border-x-4 border-t-[3px] border-stone-700 shadow-[inset_0_4px_12px_rgba(0,0,0,0.95)] z-10 -mt-2"></div>
+
+                {/* 3. SOLID SMOOTH BIN BODY (No mesh/holes!) */}
+                <div className="w-24 sm:w-28 xl:w-[122px] h-28 sm:h-32 xl:h-36 bg-gradient-to-b from-stone-400 via-stone-500 to-stone-700 rounded-b-2xl border-x-4 border-b-4 border-stone-700 shadow-[0_22px_48px_rgba(0,0,0,0.48)] relative flex flex-col items-center justify-between p-3 z-20 overflow-hidden">
+                  
+                  {/* Sleek metallic reflection highlights on solid surface */}
+                  <div className="absolute top-0 bottom-0 left-2 w-3 bg-gradient-to-b from-white/30 to-transparent blur-[1px] pointer-events-none"></div>
+                  <div className="absolute top-0 bottom-0 right-3 w-2 bg-gradient-to-b from-black/20 to-transparent blur-[1px] pointer-events-none"></div>
+
+                  {/* Clean Office Waste Emblem */}
+                  <div className="mt-1.5 sm:mt-2 flex flex-col items-center z-10">
+                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-stone-800 border-2 border-stone-600 shadow-inner flex items-center justify-center text-sm sm:text-base text-stone-200">
+                      🗑️
+                    </div>
+                    <div className="bg-stone-900 text-amber-300 font-mono font-black text-[7.5px] sm:text-[8px] xl:text-[8.5px] px-2 py-0.5 rounded shadow-inner border border-amber-400/50 mt-1.5 tracking-tighter text-center uppercase whitespace-nowrap">
+                      BUANG MASA LALU
+                    </div>
+                  </div>
+
+                  {/* 4. FOOT PEDAL (Presses down when hovered!) */}
+                  <div className="w-10 sm:w-12 h-3 bg-gradient-to-r from-stone-800 via-stone-900 to-stone-800 rounded-t border-t-2 border-x border-stone-600 shadow-lg mt-auto mb-0 transform transition-transform duration-200 group-hover/bin:translate-y-[2.5px] group-hover/bin:brightness-75"></div>
+                </div>
+
+                {/* Floor Shadow beneath Bin */}
+                <div className="w-24 sm:w-28 xl:w-[122px] h-4 bg-black/45 rounded-full blur-sm -mt-1.5 z-0 group-hover/bin:scale-105 transition-transform duration-300"></div>
+              </div>
+              </div>
+            </div>
+
           </div>
         </div>
 
         {/* Lower Floor: Bright Light Oak Scandinavian Wood Flooring */}
-        <div className="h-[22%] sm:h-[25%] w-full bg-[repeating-linear-gradient(90deg,#d6d3d1,#d6d3d1_110px,#c7c2be_110px,#c7c2be_112px)] bg-stone-300 relative shadow-[inset_0_15px_40px_rgba(0,0,0,0.2)] border-t-4 border-stone-400">
+        <div className="h-[22%] sm:h-[25%] w-full bg-[repeating-linear-gradient(90deg,#d6d3d1,#d6d3d1_110px,#c7c2be_110px,#c7c2be_112px)] bg-stone-300 relative shadow-[inset_0_15px_40px_rgba(0,0,0,0.2)] border-t-4 border-stone-400 flex justify-center">
           {/* Baseboard Plinth Molding separating Wall and Floor */}
           <div className="absolute top-0 inset-x-0 h-5 bg-gradient-to-b from-stone-200 via-stone-300 to-stone-400 border-b border-stone-500 shadow-md"></div>
           {/* Floor Reflection Light from Fridge */}
           <div className="absolute top-5 inset-x-0 h-28 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.6)_0%,transparent_65%)]"></div>
+
+          {/* STAGED STUDIO FLOOR VIEWPORT: Clamps cat movement area to match kitchen scene width on widescreen monitors! */}
+          <div className="w-full max-w-[1360px] h-full relative">
+            {/* INTERACTIVE ANIMATED OFFICE PET CAT ON THE WOODEN FLOOR! 🐱🐾 */}
+            <OfficePetCat />
+          </div>
         </div>
       </div>
 
@@ -866,12 +944,6 @@ export default function SmartFridgeApp() {
               }`}></span>
               
               <div className="w-1 h-16 bg-zinc-400 rounded-full opacity-60"></div>
-              
-              <span className="absolute right-full mr-3 bg-zinc-900/95 border border-zinc-700 text-slate-200 font-bold text-[8px] px-2 py-1 rounded shadow-xl uppercase whitespace-nowrap animate-bounce pointer-events-none hidden sm:flex items-center space-x-1.5">
-                <span className={`w-1.5 h-1.5 rounded-full ${isDoorUnlocked ? 'bg-emerald-400 animate-ping' : 'bg-rose-500'}`}></span>
-                <span>Ini namanya gagang pintu kulkas</span>
-                <span className="text-cyan-400 font-black text-xs leading-none">➔</span>
-              </span>
             </div>
           </motion.div>
 
@@ -1042,5 +1114,153 @@ export default function SmartFridgeApp() {
       </div>
 
     </div>
+  );
+}
+
+{/* =========================================================================================
+    INTERACTIVE VIRTUAL OFFICE PET CAT (PATROLS FLOOR, LICKS PAW & FUR, NAPS & MEOWS!) 🐱🐾
+    ========================================================================================= */}
+function OfficePetCat() {
+  // Cat life cycle states: 'walk-right' -> 'lick-right' -> 'walk-left' -> 'lick-left' -> 'sleep'
+  const [catState, setCatState] = useState<'walk-right' | 'lick-right' | 'walk-left' | 'lick-left' | 'sleep'>('walk-right');
+  const [isInteracted, setIsInteracted] = useState(false);
+
+  useEffect(() => {
+    // Automatic timed progression cycle for cat behaviors
+    let timer: NodeJS.Timeout;
+    if (catState === 'walk-right') {
+      timer = setTimeout(() => setCatState('lick-right'), 8000);
+    } else if (catState === 'lick-right') {
+      timer = setTimeout(() => setCatState('walk-left'), 5500);
+    } else if (catState === 'walk-left') {
+      timer = setTimeout(() => setCatState('lick-left'), 8000);
+    } else if (catState === 'lick-left') {
+      timer = setTimeout(() => setCatState('sleep'), 4500);
+    } else if (catState === 'sleep') {
+      timer = setTimeout(() => setCatState('walk-right'), 5000);
+    }
+    return () => clearTimeout(timer);
+  }, [catState]);
+
+  // Determine target horizontal position percentage and animation orientation
+  const isRight = catState === 'walk-right' || catState === 'lick-right';
+  const isWalking = catState === 'walk-right' || catState === 'walk-left';
+  const isLicking = catState === 'lick-right' || catState === 'lick-left';
+  const isSleeping = catState === 'sleep';
+  
+  const targetLeft = (catState === 'walk-right' || catState === 'lick-right') ? '74%' : '14%';
+
+  return (
+    <motion.div
+      className="absolute top-1 sm:top-2 z-[55] flex flex-col items-center pointer-events-auto select-none group/cat cursor-pointer"
+      initial={{ left: '14%' }}
+      animate={{ left: targetLeft }}
+      transition={{ 
+        left: { duration: isWalking ? 8 : 0.5, ease: isWalking ? 'linear' : 'easeOut' }
+      }}
+      onMouseEnter={() => setIsInteracted(true)}
+      onMouseLeave={() => setIsInteracted(false)}
+      onClick={() => setIsInteracted(prev => !prev)}
+      title="Kucing Dapur Kantor (Klik atau elus untuk memberi salam! 🐟)"
+    >
+      {/* ACTION & DIALOG SPEECH BUBBLE (NEVER MIRRORED OR FLIPPED!) */}
+      <div className="mb-0.5 z-40 transition-all duration-300 transform group-hover/cat:scale-105">
+        {isInteracted ? (
+          <div className="bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 text-stone-950 font-mono font-black text-[9px] sm:text-[10px] px-2.5 py-1 rounded-full shadow-lg border-[1.5px] border-stone-900 whitespace-nowrap animate-bounce flex items-center space-x-1">
+            <span>Meoww~! Minta ikan di kulkas dong Suhu!</span>
+            <span>🐟💕</span>
+          </div>
+        ) : isLicking ? (
+          <div className="bg-stone-900 text-amber-300 font-mono font-black text-[8px] sm:text-[9px] px-2 py-0.5 rounded-full shadow-md border border-stone-700 whitespace-nowrap flex items-center space-x-1">
+            <span className="animate-pulse">✨ *jilat-jilat paw & bulu*</span>
+            <span>👅🐾</span>
+          </div>
+        ) : isSleeping ? (
+          <div className="bg-sky-950/90 text-sky-200 font-mono font-black text-[8px] sm:text-[9px] px-2 py-0.5 rounded-full shadow-md border border-sky-700 whitespace-nowrap">
+            😴 Zzz... ngantuk pulass 💤
+          </div>
+        ) : (
+          <div className="bg-stone-900/80 text-stone-200 font-mono font-semibold text-[8px] sm:text-[8.5px] px-2 py-0.5 rounded-full shadow border border-stone-700 whitespace-nowrap opacity-80 group-hover/cat:opacity-100 transition-opacity">
+            🐾 *jalan patroli dapur...*
+          </div>
+        )}
+      </div>
+
+      {/* CAT CHARACTER CONTAINER (Flipped horizontally ONLY when walking right! Never flip seated/resting states) */}
+      <div className={`relative flex flex-col items-center transform transition-transform duration-300 ${isRight && isWalking && !isInteracted ? '-scale-x-100' : 'scale-x-100'}`}>
+        
+        {/* INTERACTIVE STATE: JOYFUL HEART-EYES JUMPING CAT */}
+        {isInteracted && (
+          <motion.div 
+            className="text-6xl sm:text-7xl xl:text-8xl filter drop-shadow-[0_12px_20px_rgba(0,0,0,0.5)] z-20 flex items-center justify-center"
+            animate={{ y: [0, -12, 0], scale: [1, 1.15, 1] }}
+            transition={{ duration: 0.5, repeat: Infinity }}
+          >
+            😻<span className="absolute -top-3 -right-2 text-2xl sm:text-3xl animate-ping">💖</span>
+          </motion.div>
+        )}
+
+        {/* WALKING TROT STATE */}
+        {!isInteracted && isWalking && (
+          <motion.div 
+            className="text-6xl sm:text-7xl xl:text-8xl filter drop-shadow-[0_10px_16px_rgba(0,0,0,0.45)] z-20"
+            animate={{ y: [0, -8, 0], rotate: [0, -4, 4, 0] }}
+            transition={{ duration: 0.35, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            🐈
+          </motion.div>
+        )}
+
+        {/* GROOMING & LICKING STATE (Seated Kitty 🐱 cleaning its paw 🐾 with animated tongue 👅!) */}
+        {!isInteracted && isLicking && (
+          <div className="relative text-6xl sm:text-7xl xl:text-8xl filter drop-shadow-[0_10px_16px_rgba(0,0,0,0.45)] z-20 flex items-center justify-center translate-y-1">
+            <span>🐱</span>
+            {/* 1. Animated Licking Tongue & Sparkles rendered FIRST and adjusted to center-align near paw */}
+            <motion.div 
+              className="absolute left-[18px] sm:left-[25px] xl:left-[30px] top-[50px] sm:top-[62px] xl:top-[74px] z-10 text-2xl sm:text-3xl xl:text-4xl drop-shadow pointer-events-none flex items-center space-x-0.5"
+              animate={{ 
+                x: [0, -4, 0],
+                y: [0, 4, 0],
+                rotate: [-10, 20, -10] 
+              }}
+              transition={{ duration: 0.4, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              <span>👅</span><span className="text-sm sm:text-base">✨</span>
+            </motion.div>
+            {/* 2. Raised Paw rendered AFTER tongue with z-50 so it ALWAYS sits visibly IN FRONT of the tongue! */}
+            <div className="text-3xl sm:text-4xl xl:text-5xl absolute bottom-0.5 left-3 sm:left-4 transform rotate-[25deg] z-50 drop-shadow-lg pointer-events-none">🐾</div>
+          </div>
+        )}
+
+        {/* SLEEPING STATE (Purring sleeping kitty 😽 resting sideways on floor with Zzz above its forehead!) */}
+        {!isInteracted && isSleeping && (
+          <div className="relative flex flex-col items-center justify-center translate-y-2">
+            {/* Floating Dreaming Zzz animated icon rising straight up from its head (not tail/butt!) */}
+            <motion.div 
+              className="absolute -top-5 -left-1 text-3xl sm:text-4xl filter drop-shadow z-30 pointer-events-none"
+              animate={{ y: [0, -8, 0], opacity: [0.7, 1, 0.7], rotate: [-10, 10, -10] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              💤
+            </motion.div>
+            <motion.div 
+              className="text-6xl sm:text-7xl xl:text-8xl filter drop-shadow-[0_10px_16px_rgba(0,0,0,0.45)] z-20 transform rotate-[55deg]"
+              animate={{ scale: [1, 1.04, 1] }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              😽
+            </motion.div>
+          </div>
+        )}
+
+        {/* DYNAMIC REALISTIC FLOOR SHADOW BENEATH CAT */}
+        <motion.div 
+          className="w-20 sm:w-24 xl:w-28 h-3.5 sm:h-4 bg-black/45 rounded-full blur-[2px] mt-1 z-0"
+          animate={isWalking ? { scale: [1, 0.8, 1] } : { scale: 1 }}
+          transition={{ duration: 0.35, repeat: Infinity }}
+        ></motion.div>
+
+      </div>
+    </motion.div>
   );
 }
