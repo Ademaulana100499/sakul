@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import ItemInspector3DModal, { ShelfItem3D } from './3d/ItemInspector3DModal';
 
 export default function SmartFridgeApp() {
   const { currentUser, users, items, transactions, login, logout, takeItem, updateStock, isClient } = useApp();
@@ -21,6 +22,7 @@ export default function SmartFridgeApp() {
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [showEmployeeModal, setShowEmployeeModal] = useState(false);
   const [showAdminTab, setShowAdminTab] = useState<'stock' | 'rekap' | 'history'>('stock');
+  const [inspectedItemId, setInspectedItemId] = useState<string | null>(null);
 
   // Global Fullscreen Custom Hand Cursor Tracking & Hover States
   const [mousePos, setMousePos] = useState({ x: -100, y: -100 });
@@ -43,27 +45,80 @@ export default function SmartFridgeApp() {
   const employeeUsers = users.filter(u => u.role === 'user');
   const userTransactions = currentUser ? transactions.filter(t => t.userId === currentUser.id) : [];
 
+  const perShelf = Math.ceil(items.length / 3);
   const shelves = [
-    { name: 'Rak 1: Teh, Kopi & Susu', items: items.slice(0, 5) },
-    { name: 'Rak 2: Vitamin & Isotonik', items: items.slice(5, 9) },
-    { name: 'Rak 3: Air Mineral & Soda', items: items.slice(9) },
+    { name: 'RAK KULKAS ATAS', items: items.slice(0, perShelf) },
+    { name: 'RAK KULKAS TENGAH', items: items.slice(perShelf, perShelf * 2) },
+    { name: 'RAK KULKAS BAWAH', items: items.slice(perShelf * 2) },
   ];
 
   const getBeverageStyle = (name: string) => {
     const n = name.toLowerCase();
-    if (n.includes('pocari')) return { bg: 'from-blue-500 via-sky-400 to-blue-600', label: 'Pocari' };
-    if (n.includes('stee')) return { bg: 'from-amber-600 via-yellow-500 to-amber-700', label: 'S-TEE' };
-    if (n.includes('pucuk')) return { bg: 'from-emerald-600 via-green-500 to-teal-700', label: 'Pucuk' };
-    if (n.includes('panda')) return { bg: 'from-slate-700 via-zinc-500 to-slate-800', label: 'Bird Nest' };
-    if (n.includes('golda')) return { bg: 'from-yellow-700 via-amber-600 to-yellow-800', label: 'Golda' };
-    if (n.includes('abc')) return { bg: 'from-amber-800 via-amber-700 to-stone-900', label: 'ABC Kopi' };
-    if (n.includes('yakult')) return { bg: 'from-red-500 via-rose-400 to-red-600', label: 'Yakult' };
-    if (n.includes('kaca')) return { bg: 'from-yellow-400 via-amber-300 to-yellow-500', label: 'YOU-C' };
-    if (n.includes('ultra')) return { bg: 'from-sky-600 via-blue-500 to-indigo-700', label: 'Ultra Milk' };
-    if (n.includes('nescafe')) return { bg: 'from-red-600 via-red-500 to-rose-800', label: 'Nescafe' };
-    if (n.includes('hydro')) return { bg: 'from-emerald-500 via-teal-400 to-green-600', label: 'Hydro' };
-    if (n.includes('500ml')) return { bg: 'from-yellow-500 via-amber-400 to-yellow-600', label: 'YOU-C 500' };
-    return { bg: 'from-cyan-400 via-blue-300 to-sky-500', label: 'Ron 88' };
+    if (n.includes('pocari')) return { 
+      bg: 'from-blue-600 via-sky-500 to-blue-700', label: 'Pocari', type: 'bottle',
+      capColor: 'bg-white border-slate-200', accentColor: 'border-blue-300 text-blue-900 bg-white font-extrabold',
+      hpBoost: '⚡ +50 Stamina & Ion Booster', tagline: 'Minuman pengganti ion tubuh secepat kedip mata! Cocok menyegarkan tenggorokan gurih usai terobek marathon tugas.'
+    };
+    if (n.includes('stee')) return { 
+      bg: 'from-amber-700 via-yellow-600 to-amber-800', label: 'S-TEE', type: 'bottle',
+      capColor: 'bg-yellow-400 border-yellow-600', accentColor: 'border-yellow-400 text-yellow-200 bg-amber-950 font-black',
+      hpBoost: '🍃 +30 Mood & Sweetness', tagline: 'Teh manis sejati peningkat mood instan di kala revisian melanda. Rasa manis yang jujur tanpa tipu daya!'
+    };
+    if (n.includes('pucuk')) return { 
+      bg: 'from-emerald-600 via-green-500 to-teal-700', label: 'Pucuk', type: 'bottle',
+      capColor: 'bg-emerald-300 border-emerald-500', accentColor: 'border-white text-emerald-900 bg-white font-extrabold',
+      hpBoost: '🌿 +35 Focus & Low Sugar Shield', tagline: 'Teh melati harum dengan formula less sugar, menjamin kepala segar tanpa efek mengantuk sehabis jam istirahat!'
+    };
+    if (n.includes('panda')) return { 
+      bg: 'from-slate-600 via-zinc-400 to-slate-700', label: 'Bird Nest', type: 'can',
+      capColor: 'bg-gradient-to-r from-slate-300 via-zinc-100 to-slate-400 border-slate-400', accentColor: 'border-slate-300 text-stone-900 bg-gradient-to-r from-zinc-200 to-white font-black',
+      hpBoost: '🕊️ +60 Cooling & Vitality', tagline: 'Sarang walet eksklusif berlumur selasih harum! Menyejukkan panas dalam dan merevitalisasi kewarasan berpikir.'
+    };
+    if (n.includes('golda')) return { 
+      bg: 'from-amber-700 via-yellow-700 to-stone-800', label: 'Golda', type: 'bottle',
+      capColor: 'bg-amber-400 border-amber-600', accentColor: 'border-amber-400 text-amber-200 bg-stone-900 font-black',
+      hpBoost: '☕ +70 Anti-Ngantuk & Caffeine Drive', tagline: 'Kopi susu beraroma mewah khas kafe Italia pas di dalam botol compact yang siap bertempur di meja Anda!'
+    };
+    if (n.includes('abc')) return { 
+      bg: 'from-amber-900 via-stone-800 to-stone-950', label: 'ABC Kopi', type: 'bottle',
+      capColor: 'bg-amber-600 border-amber-800', accentColor: 'border-amber-500 text-amber-300 bg-stone-900 font-bold',
+      hpBoost: '🔥 +80 Deadline Acceleration', tagline: 'Kopi mantap berpadu susu legit yang membakar semangat menyelesaikan target pekerjaan sebelum waktu Magrib!'
+    };
+    if (n.includes('yakult')) return { 
+      bg: 'from-rose-500 via-red-500 to-rose-700', label: 'Yakult', type: 'yakult',
+      capColor: 'bg-slate-200 border-slate-400 shadow-xs', accentColor: 'border-rose-400 text-rose-600 bg-white font-black',
+      hpBoost: '🛡️ +45 Immunity & Gut Defense', tagline: 'Cintai ususmu setiap hari dengan pasukan bakteri baik penjaga benteng imun tubuh di tengah musim kerja!'
+    };
+    if (n.includes('kaca')) return { 
+      bg: 'from-yellow-500 via-amber-400 to-amber-600', label: 'YOU-C', type: 'bottle',
+      capColor: 'bg-red-600 border-red-800', accentColor: 'border-red-600 text-red-600 bg-yellow-200 font-extrabold',
+      hpBoost: '🍊 +99 Vitamin C Mega Burst', tagline: 'Dosis pekat Vitamin C 1000mg di dalam botol kaca beling premium. Langsung melek, segar abadi, tangkis radikal bebas!'
+    };
+    if (n.includes('ultra')) return { 
+      bg: 'from-sky-600 via-blue-600 to-indigo-800', label: 'Ultra Milk', type: 'box',
+      capColor: 'bg-white/90 border-slate-300', accentColor: 'border-white text-sky-900 bg-white font-black',
+      hpBoost: '🥛 +65 Calcium & Smooth Nourishment', tagline: 'Susu sapi segar bergizi tinggi dengan kelembutan rasa juara abadi. Sahabat setia penghibur tenggorokan kering!'
+    };
+    if (n.includes('nescafe')) return { 
+      bg: 'from-red-600 via-red-500 to-rose-800', label: 'Nescafe', type: 'can',
+      capColor: 'bg-gradient-to-r from-slate-300 via-zinc-100 to-slate-400 border-slate-400', accentColor: 'border-amber-300 text-amber-300 bg-stone-950 font-black',
+      hpBoost: '⚡ +85 Turbo Concentration', tagline: 'Paduan aroma kopi pekat berteman dingin sejati yang bikin mata melebar dan fokus kembali aktif mode turbo!'
+    };
+    if (n.includes('hydro')) return { 
+      bg: 'from-emerald-500 via-teal-400 to-green-600', label: 'Hydro', type: 'bottle',
+      capColor: 'bg-emerald-600 border-emerald-800', accentColor: 'border-white text-emerald-900 bg-emerald-100 font-extrabold',
+      hpBoost: '🥥 +55 Natural Hydration', tagline: 'Air kelapa murni kaya nutrisi alami dan elektrolit bebas lemak pemadam dahaga sejati!'
+    };
+    if (n.includes('500ml')) return { 
+      bg: 'from-yellow-500 via-amber-400 to-yellow-600', label: 'YOU-C 500', type: 'bottle',
+      capColor: 'bg-red-600 border-red-800', accentColor: 'border-red-600 text-red-600 bg-white font-black',
+      hpBoost: '🍋 +90 Lemonade Refresh Burst', tagline: 'Kombinasi luar biasa air isotonik menyegarkan dan vitamin C tinggi dalam botol besar 500ml!'
+    };
+    return { 
+      bg: 'from-cyan-400 via-blue-300 to-sky-500', label: 'Ron 88', type: 'bottle',
+      capColor: 'bg-blue-600 border-blue-800', accentColor: 'border-cyan-400 text-blue-950 bg-white/95 font-bold',
+      hpBoost: '💧 +40 Pure Cleansing & Hydration', tagline: 'Air putih jernih pegunungan murni menyapu segala kebuntuan ide dan membasahi dahaga terlarut!'
+    };
   };
 
   // INTELLIGENT 3D HAND POSTURE LOGIC
@@ -302,17 +357,8 @@ export default function SmartFridgeApp() {
       return;
     }
 
-    if (currentUser.role === 'superadmin') {
-      updateStock(itemId, 1);
-      setToastMessage({ text: '📦 (+1 pcs) Stok rak bertambah.', type: 'success' });
-      return;
-    }
-
-    const res = takeItem(itemId);
-    setToastMessage({
-      text: res.message,
-      type: res.success ? 'success' : 'error'
-    });
+    // Trigger Video Game RPG Style 3D Item Inspector Zoom Modal!
+    setInspectedItemId(itemId);
   };
 
   if (!isClient) return null;
@@ -834,7 +880,7 @@ export default function SmartFridgeApp() {
             <div className="flex-1 flex flex-col justify-between space-y-2 relative z-10 min-h-0 py-1 overflow-y-auto">
               {shelves.map((shelf, sIdx) => (
                 <div key={sIdx} className="w-full">
-                  <div className="flex items-end justify-center space-x-1.5 px-0.5 pb-1">
+                  <div className="flex items-end justify-center space-x-1.5 px-0.5 pb-0">
                     {shelf.items.map(item => {
                       const hasStock = item.stock > 0;
                       const canAfford = currentUser ? currentUser.currentBalance >= item.price : false;
@@ -843,33 +889,60 @@ export default function SmartFridgeApp() {
                       return (
                         <div
                           key={item.id}
-                          onClick={() => handleItemClick(item.id)}
-                          className={`group flex flex-col items-center flex-1 max-w-[76px] transition-transform ${isDoorOpen ? 'active:scale-95 hover:-translate-y-1' : ''}`}
+                          className="flex flex-col items-center flex-1 max-w-[78px] relative"
                         >
-                          <span className={`text-[7px] font-black px-1 py-0.2 rounded mb-0.5 shadow-sm ${
-                            hasStock ? 'bg-zinc-900 text-white' : 'bg-rose-600 text-white font-bold'
+                          {/* Stock Floating Badge (Static & steady on wire rack) */}
+                          <span className={`text-[6.5px] font-black px-1.5 py-0.2 rounded-full mb-0.5 shadow-sm ${
+                            hasStock ? 'bg-zinc-900 border border-zinc-700 text-white' : 'bg-rose-600 border border-rose-400 text-white font-bold animate-pulse'
                           }`}>
-                            {hasStock ? `${item.stock}pcs` : '0 ❌'}
+                            {hasStock ? `${item.stock} pcs` : '0 ❌'}
                           </span>
 
-                          <div className={`w-11 h-15 sm:w-12 sm:h-16 rounded-lg bg-gradient-to-t ${style.bg} text-white border border-white/40 shadow-md flex flex-col items-center justify-between p-1 relative overflow-hidden group-hover:ring-1 group-hover:ring-cyan-400 transition-all w-full`}>
-                            <div className="absolute top-0 inset-x-0 h-3 bg-gradient-to-b from-white/60 to-transparent pointer-events-none"></div>
-                            <span className="text-xl sm:text-2xl filter drop-shadow z-10 mt-0.5">{item.icon}</span>
-                            
-                            <div className="w-full bg-black/70 rounded py-0.5 px-0.5 z-10 text-center mt-1">
-                              <span className="text-[7px] font-black tracking-tight uppercase block leading-none text-white truncate">
-                                {style.label}
-                              </span>
-                            </div>
+                          {/* IDENTICAL 3D WEBGL BOTTLE / CAN ON THE SHELF */}
+                          {/* ONLY THIS SPECIFIC PRODUCT REACTS TO HOVER ("hanya di hover per produk saja") */}
+                          <div
+                            onClick={() => {
+                              if (isDoorOpen) handleItemClick(item.id);
+                            }}
+                            onMouseEnter={() => setIsHoveringButton(true)}
+                            onMouseLeave={() => setIsHoveringButton(false)}
+                            className={`w-full flex items-center justify-center transition-all duration-200 ${
+                              isDoorOpen ? 'cursor-pointer hover:scale-125 hover:-translate-y-2 active:scale-95 z-40 hover:drop-shadow-[0_10px_20px_rgba(6,182,212,0.8)]' : 'opacity-85'
+                            }`}
+                            title={isDoorOpen ? `Klik untuk inspeksi 3D: ${item.name}` : 'Buka pintu kulkas terlebih dahulu'}
+                          >
+                            <ShelfItem3D item={item} />
                           </div>
 
-                          <div className="mt-0.5 w-full bg-white border border-slate-400 rounded px-0.5 py-0.5 text-center shadow-xs">
-                            <div className="text-[8px] font-black text-zinc-900 leading-none">
-                              Rp {item.price / 1000}k
+                          {/* PETITE OVERLAPPING SHELF PRICE TAG (HANGS OVER THE BOTTLE BASE LIKE A REAL GROCERY SHELF) */}
+                          {/* COMPLETELY STATIC ON THE WIRE RACK - DOES NOT MOVE OR SHAKE WHEN BOTTLE IS HOVERED! */}
+                          <div className="-mt-3 sm:-mt-3.5 w-[76%] max-w-[48px] bg-[#ffea00] border border-amber-600 rounded-[2.5px] shadow-[0_2px_6px_rgba(0,0,0,0.35)] overflow-hidden text-center flex flex-col relative z-20 transition-transform">
+                            {/* Slim Red Promo Header Strip */}
+                            <div className="bg-red-600 text-white font-black text-[4px] uppercase tracking-tighter py-0 leading-none border-b border-red-800">
+                              ★ PROMO ★
                             </div>
-                            <div className="text-[6px] font-black text-slate-500 mt-0.5 uppercase tracking-tighter truncate">
-                              {isDoorOpen ? (currentUser?.role === 'superadmin' ? '+1 STOK' : canAfford ? 'AMBIL' : '❌ SALDO') : 'LOCKED'}
+                            
+                            {/* Item Name */}
+                            <div className="px-0.5 pt-[1px] text-[4.5px] font-extrabold text-slate-900 leading-none truncate uppercase tracking-tight">
+                              {style.label}
                             </div>
+                            
+                            {/* Price Box */}
+                            <div className="bg-white/95 mx-[1.5px] my-[1px] px-0.5 py-[1px] rounded-[1.5px] border border-amber-400 flex items-center justify-center shadow-inner">
+                              <span className="text-[4px] mr-0.5 font-extrabold text-red-600">Rp</span>
+                              <span className="text-[6.5px] sm:text-[7px] font-black text-slate-950 tracking-tight leading-none">
+                                {(item.price).toLocaleString('id-ID')}
+                              </span>
+                            </div>
+
+                            {/* Status Badge overlay when closed or can't afford */}
+                            {(!isDoorOpen || !hasStock || (!canAfford && currentUser?.role !== 'superadmin')) && (
+                              <div className={`absolute inset-0 flex items-center justify-center text-[5px] font-black p-0.5 uppercase tracking-tighter text-center ${
+                                !isDoorOpen ? 'bg-zinc-900/95 text-amber-300' : !hasStock ? 'bg-rose-700/95 text-white' : 'bg-orange-600/95 text-white'
+                              }`}>
+                                {!isDoorOpen ? '🔒 LOCKED' : !hasStock ? '❌ HABIS' : '❌ SALDO KURANG'}
+                              </div>
+                            )}
                           </div>
                         </div>
                       );
@@ -1112,6 +1185,32 @@ export default function SmartFridgeApp() {
           Yahh ketauannn 🤪
         </div>
       </div>
+
+      {/* =========================================================================================
+          VIDEO GAME RPG STYLE 3D ITEM INSPECTOR / PICK-UP MODAL ("AMBIL INI ATAU GAK DEH") 🎮🧊
+          ========================================================================================= */}
+      {inspectedItemId && (() => {
+        const inspectedItem = items.find(i => i.id === inspectedItemId);
+        if (!inspectedItem) return null;
+
+        return (
+          <ItemInspector3DModal
+            item={inspectedItem}
+            currentUser={currentUser}
+            onClose={() => setInspectedItemId(null)}
+            onTake={() => {
+              if (currentUser?.role === 'superadmin') {
+                updateStock(inspectedItem.id, 1);
+                setToastMessage({ text: '📦 (+1 pcs) Stok rak bertambah!', type: 'success' });
+              } else {
+                const res = takeItem(inspectedItem.id);
+                setToastMessage({ text: res.message, type: res.success ? 'success' : 'error' });
+              }
+              setInspectedItemId(null);
+            }}
+          />
+        );
+      })()}
 
     </div>
   );
