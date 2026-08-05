@@ -274,6 +274,132 @@ export function DrinkMesh3D({ item, isMini = false }: DrinkMeshProps) {
 }
 
 /**
+ * SHELF ITEM CSS — Zero-WebGL CSS-only visual replica of a drink on the shelf.
+ * Matches shape (bottle/can/box/yakult) and colors from style3D.
+ * Replaces ShelfItem3D on shelves to eliminate per-item WebGL contexts.
+ */
+export function ShelfItemCSS({ item }: { item: Item }) {
+  const style = item.style3D;
+  const shape = style?.shape ?? 'bottle';
+  const body = style?.bodyColor ?? '#3b82f6';
+  const label = style?.labelColor ?? '#1e3a8a';
+  const cap = style?.capColor ?? '#2563eb';
+  const stripe = style?.stripeColor ?? '#ffffff';
+  const shortLabel = style?.shortLabel ?? item.icon ?? '🥤';
+  const isTransparent = (style?.trans ?? 0) > 0;
+
+  if (shape === 'can') {
+    return (
+      <div className="relative flex flex-col items-center justify-end" style={{ width: 28, height: 52 }}>
+        {/* Lid */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 rounded-t-full" style={{ width: 22, height: 7, background: `linear-gradient(to bottom, ${cap}, ${body})` }} />
+        {/* Pull tab */}
+        <div className="absolute top-[4px] left-1/2 -translate-x-1/2 rounded-sm" style={{ width: 6, height: 3, background: '#c0c0c0' }} />
+        {/* Body */}
+        <div className="absolute rounded-sm overflow-hidden" style={{ width: 22, height: 42, top: 5, background: `linear-gradient(to right, ${body}cc, ${body}, ${body}cc)` }}>
+          {/* Label band */}
+          <div className="absolute inset-x-0" style={{ top: '25%', height: '50%', background: label, opacity: 0.85 }} />
+          {/* Stripe */}
+          <div className="absolute inset-x-0" style={{ top: '43%', height: '14%', background: stripe, opacity: 0.6 }} />
+          {/* Shine */}
+          <div className="absolute top-0 bottom-0" style={{ left: '65%', width: '18%', background: 'rgba(255,255,255,0.18)' }} />
+          {/* Short label text */}
+          <div className="absolute inset-0 flex items-center justify-center" style={{ fontSize: 7, fontWeight: 900, color: '#fff', letterSpacing: '-0.5px', textShadow: '0 1px 2px rgba(0,0,0,0.5)', zIndex: 2 }}>
+            {shortLabel.length <= 4 ? shortLabel : item.icon}
+          </div>
+        </div>
+        {/* Bottom ring */}
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 rounded-b-full" style={{ width: 22, height: 5, background: `linear-gradient(to top, ${cap}aa, ${body})` }} />
+      </div>
+    );
+  }
+
+  if (shape === 'box') {
+    return (
+      <div className="relative flex flex-col items-center" style={{ width: 26, height: 50 }}>
+        {/* Fold top */}
+        <div className="rounded-t-sm" style={{ width: 22, height: 8, background: cap }} />
+        {/* Body */}
+        <div className="relative overflow-hidden" style={{ width: 22, height: 40, background: `linear-gradient(135deg, ${body}, ${label})` }}>
+          <div className="absolute inset-x-0" style={{ top: '20%', height: '60%', background: label, opacity: 0.6 }} />
+          <div className="absolute inset-x-0" style={{ top: '33%', height: '20%', background: stripe, opacity: 0.5 }} />
+          <div className="absolute top-0 bottom-0" style={{ left: '60%', width: '20%', background: 'rgba(255,255,255,0.15)' }} />
+          <div className="absolute inset-0 flex items-center justify-center" style={{ fontSize: 7, fontWeight: 900, color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
+            {shortLabel.length <= 4 ? shortLabel : item.icon}
+          </div>
+        </div>
+        {/* Bottom */}
+        <div className="rounded-b-sm" style={{ width: 22, height: 5, background: label }} />
+      </div>
+    );
+  }
+
+  if (shape === 'yakult') {
+    return (
+      <div className="relative flex flex-col items-center justify-end" style={{ width: 22, height: 46 }}>
+        {/* Straw hole cap */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 rounded-t-full" style={{ width: 10, height: 8, background: cap }} />
+        {/* Neck taper */}
+        <div className="absolute" style={{ top: 6, left: '50%', transform: 'translateX(-50%)', width: 14, height: 6, background: `linear-gradient(to bottom, ${body}aa, ${body})`, borderRadius: '40% 40% 0 0' }} />
+        {/* Bulgy body */}
+        <div className="absolute overflow-hidden" style={{ top: 10, left: '50%', transform: 'translateX(-50%)', width: 18, height: 32, borderRadius: '45% 45% 30% 30%', background: `linear-gradient(160deg, ${body}ee, ${body}, ${label}aa)` }}>
+          <div className="absolute top-0 bottom-0" style={{ left: '60%', width: '22%', background: 'rgba(255,255,255,0.22)' }} />
+          <div className="absolute inset-0 flex items-center justify-center" style={{ fontSize: 6, fontWeight: 900, color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
+            {item.icon}
+          </div>
+        </div>
+        {/* Base */}
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 rounded-b" style={{ width: 16, height: 4, background: label }} />
+      </div>
+    );
+  }
+
+  // Default: bottle (bottle, glass, etc.)
+  const trans = style?.trans ?? 0;
+  const bodyBg = trans > 0
+    ? `linear-gradient(160deg, ${body}99, ${body}dd, ${body}99)`
+    : `linear-gradient(160deg, ${body}cc, ${body}, ${body}cc)`;
+
+  return (
+    <div className="relative flex flex-col items-center justify-end" style={{ width: 28, height: 56 }}>
+      {/* Bottle cap */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 rounded-t-sm" style={{ width: 9, height: 5, background: cap }} />
+      {/* Neck */}
+      <div className="absolute" style={{ top: 4, left: '50%', transform: 'translateX(-50%)', width: 9, height: 10, background: body }} />
+      {/* Collar */}
+      <div className="absolute rounded-sm" style={{ top: 13, left: '50%', transform: 'translateX(-50%)', width: 14, height: 3, background: body }} />
+      {/* Body */}
+      <div
+        className="absolute overflow-hidden"
+        style={{
+          top: 15,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: 20,
+          height: 36,
+          borderRadius: '3px 3px 4px 4px',
+          background: bodyBg,
+          backdropFilter: trans > 0 ? 'blur(2px)' : undefined,
+        }}
+      >
+        {/* Label band */}
+        <div className="absolute inset-x-0" style={{ top: '20%', height: '55%', background: label, opacity: 0.75 }} />
+        {/* Center stripe */}
+        <div className="absolute inset-x-0" style={{ top: '40%', height: '15%', background: stripe, opacity: 0.55 }} />
+        {/* Shine */}
+        <div className="absolute top-0 bottom-0" style={{ left: '62%', width: '20%', background: 'rgba(255,255,255,0.2)' }} />
+        {/* Short label text */}
+        <div className="absolute inset-0 flex items-center justify-center" style={{ fontSize: 7, fontWeight: 900, color: '#fff', letterSpacing: '-0.5px', textShadow: '0 1px 3px rgba(0,0,0,0.6)', zIndex: 2 }}>
+          {shortLabel.length <= 4 ? shortLabel : item.icon}
+        </div>
+      </div>
+      {/* Bottom base */}
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 rounded-b" style={{ width: 21, height: 3, background: cap }} />
+    </div>
+  );
+}
+
+/**
  * COMPASSIONATE MINI 3D SHELF DISPLAY COMPONENT (RENDERED INSIDE FRIDGE SHELVES)
  * Ensures 100% aesthetic match between shelf display and 3D zoom inspection!
  */
@@ -290,18 +416,20 @@ export function ShelfItem3D({ item }: { item: Item }) {
 
   return (
     <div className="w-13 h-[58px] sm:w-[58px] sm:h-[68px] relative flex items-center justify-center pointer-events-none shrink-0">
-      <Canvas camera={{ position: [0, 0.15, 3.8], fov: 36 }} style={{ pointerEvents: 'none' }}>
+      <Canvas 
+        camera={{ position: [0, 0.15, 3.8], fov: 36 }} 
+        style={{ pointerEvents: 'none' }}
+        frameloop="demand"
+        gl={{ powerPreference: 'low-power', antialias: true }}
+      >
         <ambientLight intensity={2.8} />
         <directionalLight position={[5, 8, 6]} intensity={3.5} />
         <directionalLight position={[-4, -2, -3]} intensity={1.8} color="#38bdf8" />
         <directionalLight position={[0, -3, 3]} intensity={1.5} color="#ffffff" />
         
-        {/* Very subtle float intensity so bottle feels solidly grounded resting on the wire shelf! */}
-        <Float speed={1.2} rotationIntensity={0.1} floatIntensity={0.04}>
-          <group position={[0, -0.15, 0]}>
-            <DrinkMesh3D item={item} isMini={true} />
-          </group>
-        </Float>
+        <group position={[0, -0.15, 0]}>
+          <DrinkMesh3D item={item} isMini={true} />
+        </group>
       </Canvas>
     </div>
   );
@@ -357,7 +485,7 @@ export default function ItemInspector3DModal({ item, currentUser, onClose, onTak
 
       {/* CENTER STAGE: MASSIVE TRUE 3D WEBGL ROTATABLE MESH */}
       <div className="absolute inset-0 w-full h-full z-10 cursor-grab active:cursor-grabbing">
-        <Canvas camera={{ position: [0, 0.1, 6.8], fov: 32 }}>
+        <Canvas camera={{ position: [0, 0.1, 6.8], fov: 32 }} frameloop="demand">
           <ambientLight intensity={2.5} />
           <directionalLight position={[5, 10, 7]} intensity={4.0} castShadow />
           <directionalLight position={[-6, -3, -4]} intensity={2.2} color="#38bdf8" />

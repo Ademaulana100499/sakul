@@ -1,8 +1,25 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { User, Item, Transaction } from '../types';
 import { INITIAL_USERS, INITIAL_ITEMS, INITIAL_TRANSACTIONS } from '../data/dummy';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import {
+  fetchUsersFromDb,
+  fetchItemsFromDb,
+  fetchTransactionsFromDb,
+  insertUserToDb,
+  updateUserInDb,
+  deleteUserFromDb,
+  insertItemToDb,
+  updateItemInDb,
+  deleteItemFromDb,
+  executeTakeItemInDb,
+  ensureAdminExistsInDb,
+  mapDbUserToUser,
+  mapDbItemToItem,
+  mapDbTransactionToTransaction
+} from '../services/supabaseService';
 
 interface AppContextType {
   currentUser: User | null;
@@ -16,8 +33,14 @@ interface AppContextType {
   addItem: (newItem: Omit<Item, 'id'>) => void;
   updateItem: (itemId: string, updatedItem: Partial<Item>) => void;
   deleteItem: (itemId: string) => { success: boolean; message: string };
+  addUser: (newUser: Omit<User, 'id'>) => void;
+  updateUser: (userId: string, data: Partial<Omit<User, 'id' | 'role'>>) => { success: boolean; message: string };
+  deleteUser: (userId: string) => { success: boolean; message: string };
   resetToDefault: () => void;
+  refreshData: () => Promise<void>;
   isClient: boolean;
+  isLoading: boolean;
+  isSupabaseActive: boolean;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -28,40 +51,112 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [items, setItems] = useState<Item[]>(INITIAL_ITEMS);
   const [transactions, setTransactions] = useState<Transaction[]>(INITIAL_TRANSACTIONS);
   const [isClient, setIsClient] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Load from localStorage on client init (Never persist login session)
-  useEffect(() => {
-    setIsClient(true);
-    const savedUsers = localStorage.getItem('sakul_users');
-    const savedItems = localStorage.getItem('sakul_items');
-    const savedTrx = localStorage.getItem('sakul_trx');
+  // Load and sync from Supabase
+  const loadDatabaseData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      if (isSupabaseConfigured) {
+        // Ensure admin user exists in DB
+        await ensureAdminExistsInDb();
 
-    if (savedUsers) setUsers(JSON.parse(savedUsers));
-    if (savedItems) setItems(JSON.parse(savedItems));
-    if (savedTrx) setTransactions(JSON.parse(savedTrx));
+        const [dbUsers, dbItems, dbTrx] = await Promise.all([
+          fetchUsersFromDb(),
+          fetchItemsFromDb(),
+          fetchTransactionsFromDb()
+        ]);
 
-    // Clear any persistent user ID to require fresh login every refresh
-    localStorage.removeItem('sakul_current_user_id');
+        setUsers(dbUsers.length > 0 ? dbUsers : INITIAL_USERS);
+        setItems(dbItems);
+        setTransactions(dbTrx);
+      } else {
+        // Fallback to localStorage if Supabase is not yet configured
+        const savedUsers = localStorage.getItem('sakul_users');
+        const savedItems = localStorage.getItem('sakul_items');
+        const savedTrx = localStorage.getItem('sakul_trx');
+
+        if (savedUsers) setUsers(JSON.parse(savedUsers));
+        if (savedItems) setItems(JSON.parse(savedItems));
+        if (savedTrx) setTransactions(JSON.parse(savedTrx));
+      }
+    } catch (err) {
+      console.warn('Database initialization error, using local fallback:', err);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
-  // Sync to localStorage
+  useEffect(() => {
+    setIsClient(true);
+    loadDatabaseData();
+    localStorage.removeItem('sakul_current_user_id');
+  }, [loadDatabaseData]);
+
+  // Supabase Realtime Subscription for instant live multi-device updates
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
+
+    const channel = supabase
+      .channel('sakul-realtime-sync')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'users' },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const newUser = mapDbUserToUser(payload.new as any);
+            setUsers((prev) => (prev.some((u) => u.id === newUser.id) ? prev : [...prev, newUser]));
+          } else if (payload.eventType === 'UPDATE') {
+            const updated = mapDbUserToUser(payload.new as any);
+            setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+            setCurrentUser((curr) => (curr && curr.id === updated.id ? updated : curr));
+          } else if (payload.eventType === 'DELETE') {
+            const deletedId = (payload.old as any).id;
+            setUsers((prev) => prev.filter((u) => u.id !== deletedId));
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'items' },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const newItem = mapDbItemToItem(payload.new as any);
+            setItems((prev) => (prev.some((i) => i.id === newItem.id) ? prev : [newItem, ...prev]));
+          } else if (payload.eventType === 'UPDATE') {
+            const updated = mapDbItemToItem(payload.new as any);
+            setItems((prev) => prev.map((i) => (i.id === updated.id ? updated : i)));
+          } else if (payload.eventType === 'DELETE') {
+            const deletedId = (payload.old as any).id;
+            setItems((prev) => prev.filter((i) => i.id !== deletedId));
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'transactions' },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const newTrx = mapDbTransactionToTransaction(payload.new as any);
+            setTransactions((prev) => (prev.some((t) => t.id === newTrx.id) ? prev : [newTrx, ...prev]));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  // Backup sync to localStorage for offline robustness
   useEffect(() => {
     if (isClient) {
       localStorage.setItem('sakul_users', JSON.stringify(users));
-    }
-  }, [users, isClient]);
-
-  useEffect(() => {
-    if (isClient) {
       localStorage.setItem('sakul_items', JSON.stringify(items));
-    }
-  }, [items, isClient]);
-
-  useEffect(() => {
-    if (isClient) {
       localStorage.setItem('sakul_trx', JSON.stringify(transactions));
     }
-  }, [transactions, isClient]);
+  }, [users, items, transactions, isClient]);
 
   const login = (userId: string) => {
     const found = users.find(u => u.id === userId);
@@ -87,23 +182,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return { success: false, message: `Saldo Anda (Rp ${currentUser.currentBalance.toLocaleString('id-ID')}) tidak cukup untuk mengambil ${item.name} (Rp ${item.price.toLocaleString('id-ID')}).` };
     }
 
-    // Update User balance
-    const updatedUsers = users.map(u => {
-      if (u.id === currentUser.id) {
-        return { ...u, currentBalance: u.currentBalance - item.price };
-      }
-      return u;
-    });
+    const newBalance = currentUser.currentBalance - item.price;
+    const newStock = item.stock - 1;
 
-    // Update Item stock
-    const updatedItems = items.map(i => {
-      if (i.id === itemId) {
-        return { ...i, stock: i.stock - 1 };
-      }
-      return i;
-    });
+    // Optimistic UI updates
+    const updatedUsers = users.map(u => u.id === currentUser.id ? { ...u, currentBalance: newBalance } : u);
+    const updatedItems = items.map(i => i.id === itemId ? { ...i, stock: newStock } : i);
 
-    // Add transaction log
     const now = new Date();
     const formattedDate = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
     const newTrx: Transaction = {
@@ -125,17 +210,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const updatedCurrent = updatedUsers.find(u => u.id === currentUser.id);
     if (updatedCurrent) setCurrentUser(updatedCurrent);
 
+    // Persist to Supabase asynchronously
+    executeTakeItemInDb(currentUser, item, newBalance, newStock, newTrx);
+
     return { success: true, message: `Berhasil mengambil 1 ${item.name}! Saldo berkurang Rp ${item.price.toLocaleString('id-ID')}.` };
   };
 
   const updateStock = (itemId: string, delta: number) => {
-    setItems(prev => prev.map(item => {
-      if (item.id === itemId) {
-        const newStock = Math.max(0, item.stock + delta);
-        return { ...item, stock: newStock };
-      }
-      return item;
-    }));
+    const target = items.find(i => i.id === itemId);
+    if (!target) return;
+    const newStock = Math.max(0, target.stock + delta);
+
+    setItems(prev => prev.map(item => item.id === itemId ? { ...item, stock: newStock } : item));
+    updateItemInDb(itemId, { stock: newStock });
   };
 
   const addItem = (newItem: Omit<Item, 'id'>) => {
@@ -143,11 +230,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ...newItem,
       id: `item-${Date.now()}`
     };
-    setItems(prev => [item, ...prev]);
+    setItems(prev => [...prev, item]);
+    insertItemToDb(item);
   };
 
   const updateItem = (itemId: string, updatedItem: Partial<Item>) => {
     setItems(prev => prev.map(item => item.id === itemId ? { ...item, ...updatedItem } : item));
+    updateItemInDb(itemId, updatedItem);
   };
 
   const deleteItem = (itemId: string) => {
@@ -155,7 +244,36 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!target) return { success: false, message: 'Barang tidak ditemukan!' };
 
     setItems(prev => prev.filter(i => i.id !== itemId));
+    deleteItemFromDb(itemId);
     return { success: true, message: `Berhasil menghapus produk "${target.name}" dari katalog kulkas!` };
+  };
+
+  const addUser = (newUser: Omit<User, 'id'>) => {
+    const user: User = {
+      ...newUser,
+      id: `user-${Date.now()}`
+    };
+    setUsers(prev => [...prev, user]);
+    insertUserToDb(user);
+  };
+
+  const updateUser = (userId: string, data: Partial<Omit<User, 'id' | 'role'>>) => {
+    const target = users.find(u => u.id === userId);
+    if (!target) return { success: false, message: 'User tidak ditemukan!' };
+
+    setUsers(prev => prev.map(u => u.id === userId ? { ...u, ...data } : u));
+    updateUserInDb(userId, data);
+    return { success: true, message: `Data "${target.name}" berhasil diperbarui!` };
+  };
+
+  const deleteUser = (userId: string) => {
+    const target = users.find(u => u.id === userId);
+    if (!target) return { success: false, message: 'User tidak ditemukan!' };
+    if (target.role === 'superadmin') return { success: false, message: 'Tidak dapat menghapus akun Admin!' };
+
+    setUsers(prev => prev.filter(u => u.id !== userId));
+    deleteUserFromDb(userId);
+    return { success: true, message: `Berhasil menghapus user "${target.name}"!` };
   };
 
   const resetToDefault = () => {
@@ -182,8 +300,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       addItem,
       updateItem,
       deleteItem,
+      addUser,
+      updateUser,
+      deleteUser,
       resetToDefault,
-      isClient
+      refreshData: loadDatabaseData,
+      isClient,
+      isLoading,
+      isSupabaseActive: isSupabaseConfigured
     }}>
       {children}
     </AppContext.Provider>

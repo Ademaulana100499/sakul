@@ -8,7 +8,7 @@ import BeverageBuilderModal from './admin/BeverageBuilderModal';
 import { Item } from '../types';
 
 export default function SmartFridgeApp() {
-  const { currentUser, users, items, transactions, login, logout, takeItem, updateStock, addItem, updateItem, deleteItem, isClient } = useApp();
+  const { currentUser, users, items, transactions, login, logout, takeItem, updateStock, addItem, updateItem, deleteItem, addUser, updateUser, deleteUser, isClient, isSupabaseActive } = useApp();
   
   // 3D Game interaction & 2-Stage Lock states
   const [isDoorUnlocked, setIsDoorUnlocked] = useState(false); // Stage 1: GREEN DOT (Unlocked), RED DOT (Locked)
@@ -23,7 +23,7 @@ export default function SmartFridgeApp() {
   
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [showEmployeeModal, setShowEmployeeModal] = useState(false);
-  const [showAdminTab, setShowAdminTab] = useState<'stock' | 'rekap' | 'history'>('stock');
+  const [showAdminTab, setShowAdminTab] = useState<'stock' | 'rekap' | 'history' | 'users'>('stock');
   const [inspectedItemId, setInspectedItemId] = useState<string | null>(null);
   const [showBeverageBuilder, setShowBeverageBuilder] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
@@ -827,21 +827,31 @@ export default function SmartFridgeApp() {
             {currentUser?.role === 'superadmin' ? (
               <div className={`${showAdminTab === 'stock' ? 'shrink-0' : 'flex-1 h-full min-h-0'} flex flex-col space-y-1.5 relative z-10 overflow-hidden text-[10px]`}>
                 <div className="bg-zinc-950 text-white p-2 rounded-lg border border-amber-400 shadow flex items-center justify-between shrink-0">
-                  <span className="font-black text-amber-400 truncate">👑 Admin: {currentUser.name} (Kelola Stok)</span>
+                  <div className="flex items-center space-x-1.5 truncate">
+                    <span className="font-black text-amber-400 truncate">👑 Admin: {currentUser.name}</span>
+                    <span className={`px-1.5 py-0.5 rounded text-[7.5px] font-black border uppercase tracking-wider shrink-0 ${
+                      isSupabaseActive 
+                        ? 'bg-emerald-950 text-emerald-300 border-emerald-500/60 shadow-[0_0_8px_rgba(16,185,129,0.3)]' 
+                        : 'bg-amber-950 text-amber-300 border-amber-500/50'
+                    }`}>
+                      {isSupabaseActive ? '⚡ Supabase' : '💾 Local'}
+                    </span>
+                  </div>
                   <button 
                     onClick={handleCloseAndLock}
                     onMouseEnter={() => setIsHoveringButton(true)}
                     onMouseLeave={() => setIsHoveringButton(false)}
-                    className="px-2 py-1 rounded bg-rose-600 hover:bg-rose-500 text-white font-black text-[9px] shrink-0 shadow"
+                    className="px-2 py-1 rounded bg-rose-600 hover:bg-rose-500 text-white font-black text-[9px] shrink-0 shadow cursor-pointer"
                   >
                     TUTUP & KUNCI
                   </button>
                 </div>
 
                 <div className="flex space-x-1 border-b border-slate-300 pb-1 shrink-0">
-                  <button onClick={() => setShowAdminTab('stock')} onMouseEnter={() => setIsHoveringButton(true)} onMouseLeave={() => setIsHoveringButton(false)} className={`flex-1 py-1 rounded font-black ${showAdminTab === 'stock' ? 'bg-amber-400 text-zinc-950' : 'bg-slate-200 text-slate-700'}`}>📦 Stok</button>
-                  <button onClick={() => setShowAdminTab('rekap')} onMouseEnter={() => setIsHoveringButton(true)} onMouseLeave={() => setIsHoveringButton(false)} className={`flex-1 py-1 rounded font-black ${showAdminTab === 'rekap' ? 'bg-amber-400 text-zinc-950' : 'bg-slate-200 text-slate-700'}`}>📊 Rekap 14</button>
-                  <button onClick={() => setShowAdminTab('history')} onMouseEnter={() => setIsHoveringButton(true)} onMouseLeave={() => setIsHoveringButton(false)} className={`flex-1 py-1 rounded font-black ${showAdminTab === 'history' ? 'bg-amber-400 text-zinc-950' : 'bg-slate-200 text-slate-700'}`}>📜 Log</button>
+                  <button onClick={() => setShowAdminTab('stock')} onMouseEnter={() => setIsHoveringButton(true)} onMouseLeave={() => setIsHoveringButton(false)} className={`flex-1 py-1 rounded font-black text-[9px] ${showAdminTab === 'stock' ? 'bg-amber-400 text-zinc-950' : 'bg-slate-200 text-slate-700'}`}>📦 Stok</button>
+                  <button onClick={() => setShowAdminTab('rekap')} onMouseEnter={() => setIsHoveringButton(true)} onMouseLeave={() => setIsHoveringButton(false)} className={`flex-1 py-1 rounded font-black text-[9px] ${showAdminTab === 'rekap' ? 'bg-amber-400 text-zinc-950' : 'bg-slate-200 text-slate-700'}`}>📊 Rekap</button>
+                  <button onClick={() => setShowAdminTab('history')} onMouseEnter={() => setIsHoveringButton(true)} onMouseLeave={() => setIsHoveringButton(false)} className={`flex-1 py-1 rounded font-black text-[9px] ${showAdminTab === 'history' ? 'bg-amber-400 text-zinc-950' : 'bg-slate-200 text-slate-700'}`}>📜 Log</button>
+                  <button onClick={() => setShowAdminTab('users')} onMouseEnter={() => setIsHoveringButton(true)} onMouseLeave={() => setIsHoveringButton(false)} className={`flex-1 py-1 rounded font-black text-[9px] ${showAdminTab === 'users' ? 'bg-amber-400 text-zinc-950' : 'bg-slate-200 text-slate-700'}`}>👤 User</button>
                 </div>
 
                 {showAdminTab === 'rekap' && (
@@ -873,6 +883,22 @@ export default function SmartFridgeApp() {
                       </div>
                     ))}
                   </div>
+                )}
+
+                {showAdminTab === 'users' && (
+                  <UserManagementPanel
+                    users={users}
+                    onAddUser={addUser}
+                    onUpdateUser={(id, data) => {
+                      const res = updateUser(id, data);
+                      setToastMessage({ text: res.message, type: res.success ? 'success' : 'error' });
+                    }}
+                    onDeleteUser={(id) => {
+                      const res = deleteUser(id);
+                      setToastMessage({ text: res.message, type: res.success ? 'success' : 'error' });
+                    }}
+                    onHoverButton={(v) => setIsHoveringButton(v)}
+                  />
                 )}
               </div>
             ) : (
@@ -928,7 +954,7 @@ export default function SmartFridgeApp() {
               <div className="flex-1 flex flex-col justify-around gap-1 sm:gap-1.5 relative z-10 min-h-0 overflow-hidden w-full">
                 {shelves.map((shelf, sIdx) => (
                   <div key={sIdx} className="w-full shrink min-h-0 overflow-hidden flex flex-col justify-end">
-                    <div className="w-full flex items-end justify-center gap-1 sm:gap-1.5 px-1 overflow-hidden">
+                    <div className="w-full grid grid-cols-4 items-end justify-items-center gap-1 sm:gap-1.5 px-1 overflow-hidden">
                       {shelf.items.map(item => {
                         if (item.isAddSlot) {
                           return (
@@ -942,7 +968,7 @@ export default function SmartFridgeApp() {
                               }}
                               onMouseEnter={() => setIsHoveringButton(true)}
                               onMouseLeave={() => setIsHoveringButton(false)}
-                              className="flex flex-col items-center justify-center flex-1 min-w-0 max-w-[74px] h-[64px] sm:h-[74px] mb-2 cursor-pointer transition-all duration-200 hover:scale-105 active:scale-95 z-20 group/add"
+                              className="flex flex-col items-center justify-center w-full max-w-[74px] h-[64px] sm:h-[74px] mb-2 cursor-pointer transition-all duration-200 hover:scale-105 active:scale-95 z-20 group/add"
                               title="Klik untuk tambah minuman baru ke dalam stok kulkas"
                             >
                               <div className="w-13 sm:w-[58px] h-full bg-gradient-to-b from-amber-400/95 via-amber-400 to-yellow-500 border-2 border-dashed border-amber-800 rounded-lg shadow-lg flex flex-col items-center justify-center p-1 text-slate-950 group-hover/add:border-solid group-hover/add:bg-amber-300">
@@ -964,7 +990,7 @@ export default function SmartFridgeApp() {
                         return (
                           <div
                             key={item.id}
-                            className="flex flex-col items-center flex-1 min-w-0 max-w-[74px] relative pt-1 sm:pt-1.5"
+                            className="flex flex-col items-center w-full max-w-[74px] relative pt-1 sm:pt-1.5"
                           >
                             {/* Stock Floating Corner Badge (Placed at absolute top-right so it NEVER covers the bottle cap!) */}
                             <div className="absolute top-0 right-0 z-50 pointer-events-none">
@@ -988,6 +1014,7 @@ export default function SmartFridgeApp() {
                               }`}
                               title={isDoorOpen ? `Klik untuk inspeksi 3D: ${item.name}` : 'Buka pintu kulkas terlebih dahulu'}
                             >
+                              {/* AUTHENTIC 3D WEBGL BOTTLE / CAN DISPLAY ON THE SHELF */}
                               <ShelfItem3D item={item} />
                             </div>
 
@@ -1322,6 +1349,251 @@ export default function SmartFridgeApp() {
         />
       )}
 
+    </div>
+  );
+}
+
+/* =========================================================================================
+   ADMIN USER MANAGEMENT PANEL (List + Add/Edit User Form + Inline Delete Confirm)
+   ========================================================================================= */
+type UUser = import('../types').User;
+
+interface UserManagementPanelProps {
+  users: UUser[];
+  onAddUser: (u: Omit<UUser, 'id'>) => void;
+  onUpdateUser: (id: string, data: Partial<Omit<UUser, 'id' | 'role'>>) => void;
+  onDeleteUser: (id: string) => void;
+  onHoverButton: (v: boolean) => void;
+}
+
+function UserManagementPanel({ users, onAddUser, onUpdateUser, onDeleteUser, onHoverButton }: UserManagementPanelProps) {
+  const [mode, setMode] = React.useState<'list' | 'add' | 'edit'>('list');
+  const [editingUser, setEditingUser] = React.useState<UUser | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = React.useState<string | null>(null);
+
+  // Form state: only Nama & Saldo
+  const [fName, setFName] = React.useState('');
+  const [fBalance, setFBalance] = React.useState(70000);
+
+  const employeeUsers = users.filter(u => u.role !== 'superadmin');
+
+  const openAdd = () => {
+    setFName('');
+    setFBalance(70000);
+    setEditingUser(null);
+    setMode('add');
+  };
+
+  const openEdit = (u: UUser) => {
+    setFName(u.name);
+    setFBalance(u.currentBalance);
+    setEditingUser(u);
+    setMode('edit');
+  };
+
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!fName.trim()) return;
+    if (mode === 'add') {
+      const generatedEmail = `${fName.trim().toLowerCase().replace(/\s+/g, '.')}@kantor.com`;
+      onAddUser({
+        name: fName.trim(),
+        email: generatedEmail,
+        role: 'user',
+        initialBalance: fBalance,
+        currentBalance: fBalance,
+        avatar: '😊',
+      });
+    } else if (mode === 'edit' && editingUser) {
+      onUpdateUser(editingUser.id, {
+        name: fName.trim(),
+        currentBalance: fBalance,
+      });
+    }
+    setMode('list');
+    setEditingUser(null);
+  };
+
+  const confirmUserToDelete = employeeUsers.find(u => u.id === confirmDeleteId);
+
+  return (
+    <div className="flex-1 flex flex-col min-h-0 overflow-hidden space-y-1.5 text-[9px] relative">
+
+      {/* ─── DELETE CONFIRMATION OVERLAY ─── */}
+      {confirmDeleteId && confirmUserToDelete && (
+        <div className="absolute inset-0 z-[200] flex items-center justify-center bg-black/60 rounded-lg">
+          <div className="bg-zinc-900 border-2 border-rose-500 rounded-xl p-3 w-[85%] shadow-[0_0_40px_rgba(225,29,72,0.4)] text-center space-y-2">
+            <div className="text-2xl">{confirmUserToDelete.avatar}</div>
+            <p className="text-white font-black text-[10px]">Hapus <span className="text-rose-400">{confirmUserToDelete.name}</span>?</p>
+            <p className="text-slate-400 text-[8px]">Aksi ini tidak bisa dibatalkan.</p>
+            <div className="flex space-x-2 pt-1">
+              <button
+                onClick={() => setConfirmDeleteId(null)}
+                onMouseEnter={() => onHoverButton(true)}
+                onMouseLeave={() => onHoverButton(false)}
+                className="flex-1 py-1.5 rounded-lg bg-zinc-700 hover:bg-zinc-600 text-slate-200 font-black text-[9px] cursor-pointer"
+              >Batal</button>
+              <button
+                onClick={() => { onDeleteUser(confirmDeleteId); setConfirmDeleteId(null); setMode('list'); }}
+                onMouseEnter={() => onHoverButton(true)}
+                onMouseLeave={() => onHoverButton(false)}
+                className="flex-1 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-black text-[9px] cursor-pointer"
+              >🗑️ Ya, Hapus</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {mode === 'list' ? (
+        /* ─── USER LIST (HANYA NAMA & SALDO) ─── */
+        <div className="flex-1 bg-white border border-slate-300 rounded overflow-y-auto flex flex-col">
+          <div className="flex items-center justify-between px-2 py-1 bg-zinc-900 text-white rounded-t sticky top-0 z-10 shrink-0">
+            <strong className="text-amber-400 text-[9px]">👤 Pegawai ({employeeUsers.length})</strong>
+            <button
+              onClick={openAdd}
+              onMouseEnter={() => onHoverButton(true)}
+              onMouseLeave={() => onHoverButton(false)}
+              className="px-2 py-0.5 rounded text-[8px] font-black bg-amber-400 text-zinc-950 hover:bg-amber-300 cursor-pointer shadow"
+            >+ Tambah</button>
+          </div>
+
+          {employeeUsers.length === 0 ? (
+            <p className="p-3 text-center text-slate-400">Belum ada pegawai.</p>
+          ) : (
+            <div className="flex-1 overflow-y-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-100 text-slate-600 text-[8px] sticky top-0 border-b border-slate-200">
+                    <th className="p-1.5">Nama</th>
+                    <th className="p-1.5 text-right">Saldo</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y font-bold text-slate-800">
+                  {employeeUsers.map(u => (
+                    <tr
+                      key={u.id}
+                      className="hover:bg-amber-50 cursor-pointer transition-colors"
+                      onClick={() => openEdit(u)}
+                      title="Klik untuk edit data atau saldo"
+                    >
+                      <td className="p-1.5 font-black">
+                        <span className="mr-1">{u.avatar}</span>
+                        <span>{u.name}</span>
+                      </td>
+                      <td className="p-1.5 text-right text-sky-700 font-mono font-black">
+                        Rp {(u.currentBalance/1000).toFixed(0)}k
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      ) : (
+        /* ─── ADD / EDIT FORM (HANYA NAMA & SALDO) ─── */
+        <form
+          onSubmit={handleSave}
+          className="flex-1 bg-zinc-900 border border-amber-400 rounded p-2 space-y-2 overflow-y-auto flex flex-col justify-between"
+        >
+          <div className="space-y-2">
+            <div className="flex items-center justify-between pb-1 border-b border-zinc-700">
+              <strong className="text-amber-400 text-[10px]">
+                {mode === 'add' ? '✚ Tambah Pegawai Baru' : `✏️ Edit: ${editingUser?.name}`}
+              </strong>
+              <button
+                type="button"
+                onClick={() => { setMode('list'); setEditingUser(null); }}
+                onMouseEnter={() => onHoverButton(true)}
+                onMouseLeave={() => onHoverButton(false)}
+                className="text-slate-400 hover:text-white text-[11px] font-black cursor-pointer px-1"
+              >✕</button>
+            </div>
+
+            {/* Field Nama */}
+            <div>
+              <div className="text-slate-400 text-[8.5px] font-bold mb-0.5">Nama Pegawai *</div>
+              <input
+                type="text"
+                value={fName}
+                onChange={e => setFName(e.target.value)}
+                placeholder="Masukkan nama pegawai"
+                required
+                className="w-full bg-zinc-800 text-white border border-zinc-600 px-2 py-1.5 rounded text-[9.5px] focus:border-amber-400 outline-none"
+                onFocus={() => onHoverButton(true)}
+                onBlur={() => onHoverButton(false)}
+              />
+            </div>
+
+            {/* Field Saldo */}
+            <div>
+              <div className="text-slate-400 text-[8.5px] font-bold mb-0.5">
+                {mode === 'edit' ? 'Saldo Saat Ini (Rp)' : 'Saldo Awal (Rp)'}
+              </div>
+              <div className="flex items-center space-x-1">
+                <input
+                  type="number"
+                  value={fBalance}
+                  onChange={e => setFBalance(Number(e.target.value))}
+                  min={0}
+                  step={5000}
+                  className="w-full bg-zinc-800 text-white border border-zinc-600 px-2 py-1.5 rounded text-[9.5px] focus:border-amber-400 outline-none"
+                  onFocus={() => onHoverButton(true)}
+                  onBlur={() => onHoverButton(false)}
+                />
+                {mode === 'edit' && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setFBalance(b => b + 10000)}
+                      onMouseEnter={() => onHoverButton(true)}
+                      onMouseLeave={() => onHoverButton(false)}
+                      className="bg-emerald-600 hover:bg-emerald-500 text-white px-2 py-1.5 rounded text-[8px] font-black shrink-0 cursor-pointer shadow"
+                    >+10k</button>
+                    <button
+                      type="button"
+                      onClick={() => setFBalance(b => b + 50000)}
+                      onMouseEnter={() => onHoverButton(true)}
+                      onMouseLeave={() => onHoverButton(false)}
+                      className="bg-emerald-600 hover:bg-emerald-500 text-white px-2 py-1.5 rounded text-[8px] font-black shrink-0 cursor-pointer shadow"
+                    >+50k</button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex items-center space-x-1.5 pt-1 shrink-0">
+            {mode === 'edit' && (
+              <button
+                type="button"
+                onClick={() => { setConfirmDeleteId(editingUser!.id); }}
+                onMouseEnter={() => onHoverButton(true)}
+                onMouseLeave={() => onHoverButton(false)}
+                className="px-2.5 py-1.5 rounded bg-rose-950 hover:bg-rose-700 text-rose-300 hover:text-white font-black text-[8.5px] cursor-pointer border border-rose-800/60 transition-colors"
+              >🗑️ Hapus</button>
+            )}
+            <div className="flex flex-1 space-x-1.5">
+              <button
+                type="button"
+                onClick={() => { setMode('list'); setEditingUser(null); }}
+                onMouseEnter={() => onHoverButton(true)}
+                onMouseLeave={() => onHoverButton(false)}
+                className="flex-1 py-1.5 rounded bg-zinc-700 hover:bg-zinc-600 text-slate-300 font-bold text-[9px] cursor-pointer"
+              >Batal</button>
+              <button
+                type="submit"
+                onMouseEnter={() => onHoverButton(true)}
+                onMouseLeave={() => onHoverButton(false)}
+                className="flex-1 py-1.5 rounded bg-amber-400 hover:bg-amber-300 text-zinc-950 font-black text-[9px] cursor-pointer shadow"
+              >
+                {mode === 'add' ? '✅ Simpan' : '✅ Update'}
+              </button>
+            </div>
+          </div>
+        </form>
+      )}
     </div>
   );
 }

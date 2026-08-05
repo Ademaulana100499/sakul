@@ -187,7 +187,7 @@ export default function BeverageBuilderModal({ initialItem, onSave, onUpdate, on
 
             {/* LIVE 3D CANVAS */}
             <div className="absolute inset-0 z-0 cursor-grab active:cursor-grabbing">
-              <Canvas camera={{ position: [0, 0.1, 5.8], fov: 36 }}>
+              <Canvas camera={{ position: [0, 0.1, 5.8], fov: 36 }} frameloop="demand">
                 <ambientLight intensity={2.5} />
                 <directionalLight position={[4, 8, 6]} intensity={3.5} />
                 <directionalLight position={[-5, -2, -4]} intensity={2.0} color="#38bdf8" />
