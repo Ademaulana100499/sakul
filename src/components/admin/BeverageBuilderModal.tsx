@@ -56,7 +56,6 @@ export default function BeverageBuilderModal({ initialItem, onSave, onUpdate, on
     metal: 0.2,
     rough: 0.25,
     trans: 0.65,
-    shortLabel: 'NEW',
     hpBoost: '⚡ +50 Stamina Booster',
     tagline: 'Minuman dingin menyegarkan racikan khusus Admin SAKUL!'
   };
@@ -68,7 +67,6 @@ export default function BeverageBuilderModal({ initialItem, onSave, onUpdate, on
   const [capColor, setCapColor] = useState(defaultStyle.capColor || '#2563eb');
   const [isTransparent, setIsTransparent] = useState<boolean>(defaultStyle.trans > 0);
   const [isMetallic, setIsMetallic] = useState<boolean>(defaultStyle.metal >= 0.5 || shape === 'can');
-  const [shortLabel, setShortLabel] = useState(defaultStyle.shortLabel || 'SAKUL');
   const [hpBoost, setHpBoost] = useState(defaultStyle.hpBoost || '⚡ +50 Stamina Booster');
   const [tagline, setTagline] = useState(defaultStyle.tagline || 'Minuman spesial penyejuk suasana kerja!');
 
@@ -92,7 +90,7 @@ export default function BeverageBuilderModal({ initialItem, onSave, onUpdate, on
       metal: isMetallic ? 0.95 : 0.2,
       rough: isMetallic ? 0.15 : 0.25,
       trans: isTransparent && shape !== 'can' && shape !== 'box' ? 0.75 : 0,
-      shortLabel,
+      shortLabel: name.trim() ? name.trim().slice(0, 10).toUpperCase() : 'NEW',
       hpBoost,
       tagline
     }
@@ -118,7 +116,7 @@ export default function BeverageBuilderModal({ initialItem, onSave, onUpdate, on
       metal: isMetallic ? 0.95 : 0.2,
       rough: isMetallic ? 0.15 : 0.25,
       trans: isTransparent && shape !== 'can' && shape !== 'box' ? 0.75 : 0,
-      shortLabel,
+      shortLabel: name.trim() ? name.trim().slice(0, 10).toUpperCase() : 'NEW',
       hpBoost,
       tagline
     };
