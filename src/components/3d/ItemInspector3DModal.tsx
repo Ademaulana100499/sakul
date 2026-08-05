@@ -509,12 +509,12 @@ export default function ItemInspector3DModal({ item, currentUser, onClose, onTak
 
       {/* BOTTOM FLOATING ACTION CONTROLLER: "AMBIL INI ATAU GK DEH" */}
       <div className="z-20 mb-2 sm:mb-6 flex flex-col items-center w-full max-w-xl pointer-events-auto shrink-0">
-        <div className="flex items-center justify-between w-full text-[10px] sm:text-sm font-bold text-slate-200 bg-slate-900/85 backdrop-blur-md px-3 sm:px-6 py-2 sm:py-2.5 rounded-full border border-slate-700 shadow-xl mb-2 sm:mb-3">
-          <span>📦 Stok Rak: <strong className="text-white font-black text-sm sm:text-base">{item.stock} pcs</strong></span>
+        <div className="flex flex-col sm:flex-row items-center justify-between w-full text-[9px] sm:text-sm font-bold text-slate-200 bg-slate-900/85 backdrop-blur-md px-3 sm:px-6 py-1.5 sm:py-2.5 rounded-xl sm:rounded-full border border-slate-700 shadow-xl mb-2 sm:mb-3 space-y-0.5 sm:space-y-0">
+          <span>📦 Stok Rak: <strong className="text-white font-black text-[11px] sm:text-base">{item.stock} pcs</strong></span>
           {isSuperAdmin ? (
             <span>👑 Mode Admin: <strong className="text-amber-400 font-black">Inspeksi & Kelola Produk</strong></span>
           ) : currentUser ? (
-            <span>💰 Saldo Anda: <strong className={`font-black text-sm sm:text-base ${!canAfford ? 'text-rose-400 font-extrabold animate-pulse' : 'text-emerald-400'}`}>Rp {currentUser.currentBalance.toLocaleString('id-ID')} {!canAfford ? '(❌ Kurang)' : '(✅ Cukup)'}</strong></span>
+            <span>💰 Saldo Anda: <strong className={`font-black text-[11px] sm:text-base ${!canAfford ? 'text-rose-400 font-extrabold animate-pulse' : 'text-emerald-400'}`}>Rp {currentUser.currentBalance.toLocaleString('id-ID')} {!canAfford ? '(❌ Kurang)' : '(✅ Cukup)'}</strong></span>
           ) : null}
         </div>
 

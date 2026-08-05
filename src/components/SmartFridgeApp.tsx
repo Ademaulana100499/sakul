@@ -796,23 +796,6 @@ export default function SmartFridgeApp() {
               </div>
             </div>
             <div className="flex items-center space-x-1.5 shrink-0">
-              {isDoorOpen && (
-                currentUser?.role === 'superadmin' ? (
-                  <div className="px-2 py-0.5 rounded font-mono text-[9px] font-black border border-amber-400 bg-amber-950 text-amber-300 flex items-center space-x-1 shadow-md" title="Admin memiliki akses buka pintu kulkas tanpa batas waktu!">
-                    <span>👑 AKSES:</span>
-                    <span className="text-white text-[10px]">∞ TANPA BATAS</span>
-                  </div>
-                ) : (
-                  <div className={`px-2 py-0.5 rounded font-mono text-[9px] font-black border flex items-center space-x-1 shadow-md ${
-                    openTimeRemaining <= 15
-                      ? 'bg-rose-950 text-rose-300 border-rose-500 animate-pulse'
-                      : 'bg-amber-950 text-amber-300 border-amber-400'
-                  }`}>
-                    <span>⏳ BUKA:</span>
-                    <span className="text-white text-[10px]">{openTimeRemaining}d</span>
-                  </div>
-                )
-              )}
               <div className="bg-zinc-950 text-cyan-300 px-2 py-0.5 rounded font-mono text-[10px] font-black shrink-0 border border-zinc-700">
                 02.0°C
               </div>
