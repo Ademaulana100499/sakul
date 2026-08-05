@@ -157,7 +157,7 @@ export default function SmartFridgeApp() {
     };
   };
 
-  // INTELLIGENT 3D HAND POSTURE LOGIC
+  // INTELLIGENT 3D HAND POSTURE LOGIC (Context-Aware per Tab & Role!)
   const getHandCursorDetails = () => {
     if (showAuthPrompt || isHoveringButton) {
       return {
@@ -185,6 +185,15 @@ export default function SmartFridgeApp() {
       }
     }
     if (isDoorOpen) {
+      // Admin on non-stock tab (rekap, history, users) → generic pointer
+      if (currentUser?.role === 'superadmin' && showAdminTab !== 'stock') {
+        return {
+          icon: '🖐️',
+          text: '',
+          color: '',
+          transform: 'translate(-60%, -60%)'
+        };
+      }
       return {
         icon: '👇',
         text: 'AMBIL MINUMAN',
@@ -782,7 +791,7 @@ export default function SmartFridgeApp() {
                   SAKUL (Saldo Kulkas)
                 </h1>
                 <p className="text-[8px] font-extrabold text-zinc-600 uppercase tracking-wider truncate mt-0.5">
-                  SALDO RP 70.000 / PEGAWAI
+                  KULKAS MINUMAN KANTOR
                 </p>
               </div>
             </div>
@@ -826,13 +835,6 @@ export default function SmartFridgeApp() {
                 <div className="bg-zinc-950 text-white p-2 rounded-lg border border-amber-400 shadow flex items-center justify-between shrink-0">
                   <div className="flex items-center space-x-1.5 truncate">
                     <span className="font-black text-amber-400 truncate">👑 Admin: {currentUser.name}</span>
-                    <span className={`px-1.5 py-0.5 rounded text-[7.5px] font-black border uppercase tracking-wider shrink-0 ${
-                      isSupabaseActive 
-                        ? 'bg-emerald-950 text-emerald-300 border-emerald-500/60 shadow-[0_0_8px_rgba(16,185,129,0.3)]' 
-                        : 'bg-amber-950 text-amber-300 border-amber-500/50'
-                    }`}>
-                      {isSupabaseActive ? '⚡ Supabase' : '💾 Local'}
-                    </span>
                   </div>
                   <button 
                     onClick={handleCloseAndLock}
@@ -927,17 +929,17 @@ export default function SmartFridgeApp() {
                       <div className="truncate">
                         <span className="text-[7px] text-emerald-400 font-black uppercase flex items-center space-x-1">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>
-                          <span>CHILLER ACTIVE</span>
+                          <span>PENDINGIN AKTIF</span>
                         </span>
-                        <h2 className="text-[10px] font-black text-white truncate">13 Varian Minuman Dingin</h2>
+                        <h2 className="text-[10px] font-black text-white truncate">{items.length} Minuman Tersedia</h2>
                       </div>
                     </div>
                     <div className="flex items-center space-x-1 bg-black/80 px-2 py-0.5 rounded border border-zinc-700 shrink-0">
                       <div className="text-right text-[8px]">
-                        <div className="text-cyan-400 font-bold">Saldo:</div>
-                        <div className="text-[10px] font-black text-white leading-none">Rp 70.000</div>
+                        <div className="text-cyan-400 font-bold">Suhu:</div>
+                        <div className="text-[10px] font-black text-white leading-none">2.0°C</div>
                       </div>
-                      <div className="px-1.5 py-1 rounded bg-zinc-700 text-slate-300 font-black text-[8px] shrink-0 border border-zinc-600 shadow-inner">STOK SIAP</div>
+                      <div className="px-1.5 py-1 rounded bg-emerald-800 text-emerald-200 font-black text-[8px] shrink-0 border border-emerald-600 shadow-inner">● AKTIF</div>
                     </div>
                   </div>
                 )}

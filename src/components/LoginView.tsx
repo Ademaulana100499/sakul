@@ -147,7 +147,7 @@ export default function LoginView({ onOpenDoor, isOpening }: LoginViewProps) {
             )}
 
             <div className="flex items-center justify-between text-[11px] text-slate-500 font-semibold pt-1">
-              <span>💡 Kuota gratis: Rp 70.000 / bln</span>
+              <span>💡 Saldo otomatis terkelola per pegawai</span>
               <span className="text-emerald-700 font-black">2.0°C SUPER CHILLED</span>
             </div>
           </div>
