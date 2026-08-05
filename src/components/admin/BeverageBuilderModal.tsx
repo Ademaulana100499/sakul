@@ -150,14 +150,14 @@ export default function BeverageBuilderModal({ initialItem, onSave, onUpdate, on
       <div className="bg-zinc-900 text-white w-full max-w-6xl rounded-2xl border-2 border-amber-400 shadow-[0_0_60px_rgba(251,191,36,0.25)] flex flex-col overflow-hidden max-h-[95vh]">
         
         {/* HEADER MODAL */}
-        <div className="bg-zinc-950 px-5 py-3 border-b border-zinc-800 flex items-center justify-between shrink-0">
-          <div className="flex items-center space-x-3">
-            <span className="text-2xl sm:text-3xl animate-bounce">🎨</span>
+        <div className="bg-zinc-950 px-3 sm:px-5 py-2 sm:py-3 border-b border-zinc-800 flex items-center justify-between shrink-0">
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <span className="text-xl sm:text-3xl animate-bounce">🎨</span>
             <div>
-              <h2 className="text-base sm:text-xl font-black text-amber-400 uppercase tracking-wide">
+              <h2 className="text-xs sm:text-xl font-black text-amber-400 uppercase tracking-wide leading-tight">
                 {isEdit ? 'Edit Minuman & Spesifikasi 3D' : 'Studio Peracik Minuman 3D SAKUL'}
               </h2>
-              <p className="text-[10px] sm:text-xs text-slate-400">
+              <p className="hidden sm:block text-xs text-slate-400 mt-0.5">
                 Atur bentuk, warna, harga, dan promosikan di atas rak kulkas kantor Anda secara live & dinamis!
               </p>
             </div>
@@ -174,13 +174,13 @@ export default function BeverageBuilderModal({ initialItem, onSave, onUpdate, on
         <div className="flex-1 grid grid-cols-1 md:grid-cols-12 overflow-hidden min-h-0">
           
           {/* LEFT COLUMN: LIVE 3D WEBGL ROTATING STUDIO (5 COLS) */}
-          <div className="md:col-span-5 bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950 p-4 border-b md:border-b-0 md:border-r border-zinc-800 flex flex-col justify-between relative min-h-[220px] sm:min-h-[420px]">
-            <div className="z-10 bg-black/60 backdrop-blur-md border border-amber-500/40 p-2.5 rounded-xl text-center shadow">
-              <span className="text-[10px] text-amber-400 font-black tracking-widest uppercase block animate-pulse">
+          <div className="md:col-span-5 bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950 p-2 sm:p-4 border-b md:border-b-0 md:border-r border-zinc-800 flex flex-col justify-between relative min-h-[220px] sm:min-h-[420px]">
+            <div className="z-10 bg-black/60 backdrop-blur-md border border-amber-500/40 p-1.5 sm:p-2.5 rounded-xl text-center shadow mx-8 sm:mx-0">
+              <span className="hidden sm:block text-[10px] text-amber-400 font-black tracking-widest uppercase animate-pulse">
                 👁️ LIVE 3D ROTATING PREVIEW
               </span>
-              <h3 className="font-black text-lg sm:text-2xl text-white truncate my-0.5">{previewItem.name}</h3>
-              <div className="text-xs font-extrabold text-emerald-400">Rp {previewItem.price.toLocaleString('id-ID')} ({previewItem.stock} pcs)</div>
+              <h3 className="font-black text-sm sm:text-2xl text-white truncate my-0 sm:my-0.5">{previewItem.name}</h3>
+              <div className="text-[10px] sm:text-xs font-extrabold text-emerald-400">Rp {previewItem.price.toLocaleString('id-ID')} ({previewItem.stock} pcs)</div>
             </div>
 
             {/* LIVE 3D CANVAS */}
@@ -200,7 +200,7 @@ export default function BeverageBuilderModal({ initialItem, onSave, onUpdate, on
               </Canvas>
             </div>
 
-            <div className="z-10 mt-auto pt-2 bg-zinc-900/80 backdrop-blur border border-zinc-700 p-2.5 rounded-xl text-[11px] text-slate-300 text-center shadow">
+            <div className="hidden sm:block z-10 mt-auto pt-2 bg-zinc-900/80 backdrop-blur border border-zinc-700 p-2.5 rounded-xl text-[11px] text-slate-300 text-center shadow">
               💡 <strong className="text-cyan-300">Tips Admin:</strong> Klik & geser objek di atas untuk memutar botol 3D 360° secara langsung!
             </div>
           </div>
