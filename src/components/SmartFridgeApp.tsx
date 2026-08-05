@@ -4,9 +4,11 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import ItemInspector3DModal, { ShelfItem3D } from './3d/ItemInspector3DModal';
+import BeverageBuilderModal from './admin/BeverageBuilderModal';
+import { Item } from '../types';
 
 export default function SmartFridgeApp() {
-  const { currentUser, users, items, transactions, login, logout, takeItem, updateStock, isClient } = useApp();
+  const { currentUser, users, items, transactions, login, logout, takeItem, updateStock, addItem, updateItem, deleteItem, isClient } = useApp();
   
   // 3D Game interaction & 2-Stage Lock states
   const [isDoorUnlocked, setIsDoorUnlocked] = useState(false); // Stage 1: GREEN DOT (Unlocked), RED DOT (Locked)
@@ -23,6 +25,8 @@ export default function SmartFridgeApp() {
   const [showEmployeeModal, setShowEmployeeModal] = useState(false);
   const [showAdminTab, setShowAdminTab] = useState<'stock' | 'rekap' | 'history'>('stock');
   const [inspectedItemId, setInspectedItemId] = useState<string | null>(null);
+  const [showBeverageBuilder, setShowBeverageBuilder] = useState(false);
+  const [editingItem, setEditingItem] = useState<Item | null>(null);
 
   // Global Fullscreen Custom Hand Cursor Tracking & Hover States
   const [mousePos, setMousePos] = useState({ x: -100, y: -100 });
@@ -45,15 +49,47 @@ export default function SmartFridgeApp() {
   const employeeUsers = users.filter(u => u.role === 'user');
   const userTransactions = currentUser ? transactions.filter(t => t.userId === currentUser.id) : [];
 
-  const perShelf = Math.ceil(items.length / 3);
-  const shelves = [
-    { name: 'RAK KULKAS ATAS', items: items.slice(0, perShelf) },
-    { name: 'RAK KULKAS TENGAH', items: items.slice(perShelf, perShelf * 2) },
-    { name: 'RAK KULKAS BAWAH', items: items.slice(perShelf * 2) },
-  ];
+  // Pengisian rak berurutan dari atas dulu sampai penuh (maksimal 4 per rak), lalu lanjut turun ke rak bawahnya
+  const maxPerShelf = 4;
+  const displayItems: Item[] = [...items];
 
-  const getBeverageStyle = (name: string) => {
-    const n = name.toLowerCase();
+  // Khusus Admin di tab stok saat kulkas terbuka: letakkan slot tombol "+ Tambah" di samping item terakhir
+  if (currentUser?.role === 'superadmin' && isDoorOpen && showAdminTab === 'stock') {
+    displayItems.push({
+      id: 'ADD_NEW_ITEM_SLOT',
+      name: 'Tambah Baru',
+      price: 0,
+      stock: 1,
+      category: 'Air & Lainnya',
+      icon: '➕',
+      bgGradient: 'from-amber-400 to-yellow-500',
+      isAddSlot: true,
+    });
+  }
+
+  const totalShelves = Math.max(4, Math.ceil(displayItems.length / maxPerShelf));
+  const shelfNames = ['RAK KULKAS ATAS', 'RAK KULKAS TENGAH 1', 'RAK KULKAS TENGAH 2', 'RAK KULKAS BAWAH'];
+
+  const shelves = Array.from({ length: totalShelves }, (_, idx) => {
+    return {
+      name: shelfNames[idx] || `RAK KULKAS EKSTRA ${idx - 3}`,
+      items: displayItems.slice(idx * maxPerShelf, (idx + 1) * maxPerShelf),
+    };
+  });
+
+  const getBeverageStyle = (item: Item) => {
+    if (item.style3D) {
+      return {
+        bg: item.bgGradient || 'from-cyan-500/20 via-sky-400/10 to-blue-600/20',
+        label: item.style3D.shortLabel || item.name.slice(0, 10),
+        type: item.style3D.shape,
+        capColor: 'bg-white border-slate-200',
+        accentColor: 'border-white text-slate-900 bg-white font-extrabold',
+        hpBoost: item.style3D.hpBoost || '⚡ +50 Refreshing Booster',
+        tagline: item.style3D.tagline || 'Minuman segar spesial pilihan admin kantor SAKUL!'
+      };
+    }
+    const n = item.name.toLowerCase();
     if (n.includes('pocari')) return { 
       bg: 'from-blue-600 via-sky-500 to-blue-700', label: 'Pocari', type: 'bottle',
       capColor: 'bg-white border-slate-200', accentColor: 'border-blue-300 text-blue-900 bg-white font-extrabold',
@@ -297,41 +333,44 @@ export default function SmartFridgeApp() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showAuthPrompt, enteredPin, pinError]);
 
-  // 1-Minute Open Door Timer (Compressor Safety & Electricity Saving Alarm)
+  // 1-Minute Open Door Timer (Compressor Safety & Electricity Saving Alarm) - Unlimited time for Superadmin!
   useEffect(() => {
-    if (!isDoorOpen) {
+    if (!isDoorOpen || currentUser?.role === 'superadmin') {
       setOpenTimeRemaining(60);
       return;
     }
 
     const timer = setInterval(() => {
-      setOpenTimeRemaining((prev) => {
-        if (prev === 16) {
-          setToastMessage({
-            text: '⚠️ ALARM DARURAT: Sisa 15 detik! Cepetan ambil minum & tutup pintu kulkasnya! Kalau dibuka kelamaan kompresor bisa jebol mampus & boros listrik! ⚡🥶',
-            type: 'error'
-          });
-        }
-
-        if (prev <= 1) {
-          clearInterval(timer);
-          setIsDoorOpen(false);
-          setIsDoorUnlocked(false);
-          setIsPinVerified(false);
-          setIsGantengFound(false);
-          logout();
-          setToastMessage({
-            text: '🚨 BLAM! Pintu kulkas NGEREM DEPAR KETUTUP & TERKUNCI OTOMATIS! Waktu buka habis (1 menit)! "WOOYY JANGAN BUKAIN KULKAS LAMA-LAMA BUANG ANGIN FREON MAMPUS! BAYAR NO REKENING LISTRIK SANA!" 😤⚡',
-            type: 'error'
-          });
-          return 60;
-        }
-        return prev - 1;
-      });
+      setOpenTimeRemaining((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isDoorOpen, logout]);
+  }, [isDoorOpen, currentUser]);
+
+  // Handle countdown thresholds safely after render cycle completes to avoid setState during renderer warnings
+  useEffect(() => {
+    if (!isDoorOpen || currentUser?.role === 'superadmin') return;
+
+    if (openTimeRemaining === 15) {
+      setToastMessage({
+        text: '⚠️ ALARM DARURAT: Sisa 15 detik! Cepetan ambil minum & tutup pintu kulkasnya! Kalau dibuka kelamaan kompresor bisa jebol mampus & boros listrik! ⚡🥶',
+        type: 'error'
+      });
+    }
+
+    if (openTimeRemaining === 0) {
+      setIsDoorOpen(false);
+      setIsDoorUnlocked(false);
+      setIsPinVerified(false);
+      setIsGantengFound(false);
+      logout();
+      setToastMessage({
+        text: '🚨 BLAM! Pintu kulkas NGEREM DEPAR KETUTUP & TERKUNCI OTOMATIS! Waktu buka habis (1 menit)! "WOOYY JANGAN BUKAIN KULKAS LAMA-LAMA BUANG ANGIN FREON MAMPUS! BAYAR NO REKENING LISTRIK SANA!" 😤⚡',
+        type: 'error'
+      });
+      setOpenTimeRemaining(60);
+    }
+  }, [openTimeRemaining, isDoorOpen, currentUser, logout]);
 
   const handleCloseAndLock = () => {
     setIsDoorOpen(false);
@@ -752,14 +791,21 @@ export default function SmartFridgeApp() {
             </div>
             <div className="flex items-center space-x-1.5 shrink-0">
               {isDoorOpen && (
-                <div className={`px-2 py-0.5 rounded font-mono text-[9px] font-black border flex items-center space-x-1 shadow-md ${
-                  openTimeRemaining <= 15
-                    ? 'bg-rose-950 text-rose-300 border-rose-500 animate-pulse'
-                    : 'bg-amber-950 text-amber-300 border-amber-400'
-                }`}>
-                  <span>⏳ BUKA:</span>
-                  <span className="text-white text-[10px]">{openTimeRemaining}d</span>
-                </div>
+                currentUser?.role === 'superadmin' ? (
+                  <div className="px-2 py-0.5 rounded font-mono text-[9px] font-black border border-amber-400 bg-amber-950 text-amber-300 flex items-center space-x-1 shadow-md" title="Admin memiliki akses buka pintu kulkas tanpa batas waktu!">
+                    <span>👑 AKSES:</span>
+                    <span className="text-white text-[10px]">∞ TANPA BATAS</span>
+                  </div>
+                ) : (
+                  <div className={`px-2 py-0.5 rounded font-mono text-[9px] font-black border flex items-center space-x-1 shadow-md ${
+                    openTimeRemaining <= 15
+                      ? 'bg-rose-950 text-rose-300 border-rose-500 animate-pulse'
+                      : 'bg-amber-950 text-amber-300 border-amber-400'
+                  }`}>
+                    <span>⏳ BUKA:</span>
+                    <span className="text-white text-[10px]">{openTimeRemaining}d</span>
+                  </div>
+                )
               )}
               <div className="bg-zinc-950 text-cyan-300 px-2 py-0.5 rounded font-mono text-[10px] font-black shrink-0 border border-zinc-700">
                 02.0°C
@@ -773,15 +819,15 @@ export default function SmartFridgeApp() {
             ========================================================================================= */}
         <div className="flex-1 relative overflow-hidden flex flex-col min-h-0 [perspective:1400px]">
           
-          <main className="flex-1 relative bg-gradient-to-b from-slate-100 via-white to-slate-200 px-2.5 py-2 flex flex-col justify-start space-y-1.5 overflow-y-auto overflow-x-hidden min-h-0 shadow-[inset_0_0_45px_rgba(0,0,0,0.2)]">
+          <main className="flex-1 relative bg-gradient-to-b from-slate-100 via-white to-slate-200 px-2 py-1 flex flex-col justify-between space-y-1 overflow-hidden min-h-0 shadow-[inset_0_0_45px_rgba(0,0,0,0.2)]">
             
             <div className="absolute top-0 inset-x-0 h-5 bg-gradient-to-b from-white to-transparent shadow-[0_4px_20px_#ffffff] pointer-events-none z-0"></div>
 
             {/* TOP USER / ADMIN CONTROL STATUS INSIDE THE FRIDGE */}
             {currentUser?.role === 'superadmin' ? (
-              <div className="flex-1 flex flex-col space-y-2 relative z-10 overflow-hidden text-[10px]">
+              <div className={`${showAdminTab === 'stock' ? 'shrink-0' : 'flex-1 h-full min-h-0'} flex flex-col space-y-1.5 relative z-10 overflow-hidden text-[10px]`}>
                 <div className="bg-zinc-950 text-white p-2 rounded-lg border border-amber-400 shadow flex items-center justify-between shrink-0">
-                  <span className="font-black text-amber-400 truncate">👑 Admin: {currentUser.name} (+1 Stok)</span>
+                  <span className="font-black text-amber-400 truncate">👑 Admin: {currentUser.name} (Kelola Stok)</span>
                   <button 
                     onClick={handleCloseAndLock}
                     onMouseEnter={() => setIsHoveringButton(true)}
@@ -876,91 +922,120 @@ export default function SmartFridgeApp() {
             )}
 
             {/* =========================================================================================
-                3. VIBRANT COLORFUL CANS & BOTTLES RESTING ON WHITE WIRE GRATES
+                3. VIBRANT COLORFUL CANS & BOTTLES RESTING ON WHITE WIRE GRATES (ONLY SHOWN ON STOK TAB OR USER MODE)
                 ========================================================================================= */}
-            <div className="flex-1 flex flex-col justify-between space-y-2 relative z-10 min-h-0 py-1 overflow-y-auto">
-              {shelves.map((shelf, sIdx) => (
-                <div key={sIdx} className="w-full">
-                  <div className="flex items-end justify-center space-x-1.5 px-0.5 pb-1">
-                    {shelf.items.map(item => {
-                      const hasStock = item.stock > 0;
-                      const canAfford = currentUser ? currentUser.currentBalance >= item.price : false;
-                      const style = getBeverageStyle(item.name);
+            {(!currentUser || currentUser.role !== 'superadmin' || showAdminTab === 'stock') && (
+              <div className="flex-1 flex flex-col justify-around gap-1 sm:gap-1.5 relative z-10 min-h-0 overflow-hidden w-full">
+                {shelves.map((shelf, sIdx) => (
+                  <div key={sIdx} className="w-full shrink min-h-0 overflow-hidden flex flex-col justify-end">
+                    <div className="w-full flex items-end justify-center gap-1 sm:gap-1.5 px-1 overflow-hidden">
+                      {shelf.items.map(item => {
+                        if (item.isAddSlot) {
+                          return (
+                            <div
+                              key={item.id}
+                              onClick={() => {
+                                if (isDoorOpen) {
+                                  setEditingItem(null);
+                                  setShowBeverageBuilder(true);
+                                }
+                              }}
+                              onMouseEnter={() => setIsHoveringButton(true)}
+                              onMouseLeave={() => setIsHoveringButton(false)}
+                              className="flex flex-col items-center justify-center flex-1 min-w-0 max-w-[74px] h-[64px] sm:h-[74px] mb-2 cursor-pointer transition-all duration-200 hover:scale-105 active:scale-95 z-20 group/add"
+                              title="Klik untuk tambah minuman baru ke dalam stok kulkas"
+                            >
+                              <div className="w-13 sm:w-[58px] h-full bg-gradient-to-b from-amber-400/95 via-amber-400 to-yellow-500 border-2 border-dashed border-amber-800 rounded-lg shadow-lg flex flex-col items-center justify-center p-1 text-slate-950 group-hover/add:border-solid group-hover/add:bg-amber-300">
+                                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-slate-950 text-amber-400 flex items-center justify-center font-black text-base sm:text-lg shadow group-hover/add:scale-110 transition-transform">
+                                  +
+                                </div>
+                                <span className="text-[6.5px] sm:text-[7.5px] font-black uppercase tracking-tighter text-center mt-1 leading-none drop-shadow-sm">
+                                  TAMBAH BARU
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        }
 
-                      return (
-                        <div
-                          key={item.id}
-                          className="flex flex-col items-center flex-1 max-w-[78px] relative pt-2 sm:pt-2.5"
-                        >
-                          {/* Stock Floating Corner Badge (Placed at absolute top-right so it NEVER covers the bottle cap!) */}
-                          <div className="absolute top-0 right-0 z-50 pointer-events-none">
-                            <span className={`text-[5.5px] font-black px-1.5 py-[1px] rounded-full shadow-md block leading-none ${
-                              hasStock ? 'bg-slate-900 border border-slate-600 text-cyan-300' : 'bg-rose-700 border border-rose-400 text-white font-bold animate-pulse'
-                            }`}>
-                              {hasStock ? `${item.stock} pcs` : '0 ❌'}
-                            </span>
-                          </div>
+                        const hasStock = item.stock > 0;
+                        const canAfford = currentUser ? currentUser.currentBalance >= item.price : false;
+                        const style = getBeverageStyle(item);
 
-                          {/* IDENTICAL 3D WEBGL BOTTLE / CAN ON THE SHELF */}
-                          {/* ONLY THIS SPECIFIC PRODUCT REACTS TO HOVER ("hanya di hover per produk saja") */}
+                        return (
                           <div
-                            onClick={() => {
-                              if (isDoorOpen) handleItemClick(item.id);
-                            }}
-                            onMouseEnter={() => setIsHoveringButton(true)}
-                            onMouseLeave={() => setIsHoveringButton(false)}
-                            className={`w-full flex items-center justify-center transition-all duration-200 ${
-                              isDoorOpen ? 'cursor-pointer hover:scale-115 hover:-translate-y-2 active:scale-95 z-10 hover:z-20 hover:drop-shadow-[0_10px_20px_rgba(6,182,212,0.8)]' : 'opacity-85 z-10'
-                            }`}
-                            title={isDoorOpen ? `Klik untuk inspeksi 3D: ${item.name}` : 'Buka pintu kulkas terlebih dahulu'}
+                            key={item.id}
+                            className="flex flex-col items-center flex-1 min-w-0 max-w-[74px] relative pt-1 sm:pt-1.5"
                           >
-                            <ShelfItem3D item={item} />
-                          </div>
-
-                          {/* ULTRA-COMPACT CLAMPED MINIMARKET SHELF PRICE TAG (-mt-4.5 & z-[60] GUARANTEES IT STAYS AT THE VERY FRONT OF THE BOTTLES!) */}
-                          {/* COMPLETELY STATIC ON THE WIRE RACK - DOES NOT MOVE OR SHAKE WHEN BOTTLE IS HOVERED! */}
-                          <div className="-mt-4.5 w-[76%] max-w-[50px] bg-[#ffea00] border border-amber-600 rounded-[2.5px] shadow-[0_3px_8px_rgba(0,0,0,0.4)] overflow-hidden text-center flex flex-col relative z-[60] pointer-events-none">
-                            {/* Slim Red Promo Header Strip */}
-                            <div className="bg-red-600 text-white font-black text-[4.5px] uppercase tracking-tighter py-[0.5px] leading-none border-b border-red-800">
-                              ★ PROMO ★
-                            </div>
-                            
-                            {/* Item Name */}
-                            <div className="px-0.5 pt-[1px] text-[4.5px] font-extrabold text-slate-900 leading-none truncate uppercase tracking-tight">
-                              {style.label}
-                            </div>
-                            
-                            {/* Price Box */}
-                            <div className="bg-white/95 mx-[1.5px] my-[1.5px] px-1 py-[1.5px] rounded-[1.5px] border border-amber-400 flex items-center justify-center shadow-inner">
-                              <span className="text-[4.5px] mr-[2px] font-extrabold text-red-600">Rp</span>
-                              <span className="text-[7px] font-black text-slate-950 tracking-tight leading-none">
-                                {(item.price).toLocaleString('id-ID')}
+                            {/* Stock Floating Corner Badge (Placed at absolute top-right so it NEVER covers the bottle cap!) */}
+                            <div className="absolute top-0 right-0 z-50 pointer-events-none">
+                              <span className={`text-[5.5px] font-black px-1.5 py-[1px] rounded-full shadow-md block leading-none ${
+                                hasStock ? 'bg-slate-900 border border-slate-600 text-cyan-300' : 'bg-rose-700 border border-rose-400 text-white font-bold animate-pulse'
+                              }`}>
+                                {hasStock ? `${item.stock} pcs` : '0 ❌'}
                               </span>
                             </div>
 
-                            {/* Status Badge overlay ONLY when item is out of stock ("HABIS") */}
-                            {!hasStock && (
-                              <div className="absolute inset-0 flex items-center justify-center text-[5.5px] font-black p-0.5 uppercase tracking-tighter text-center bg-rose-700/95 text-white">
-                                ❌ HABIS
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                            {/* IDENTICAL 3D WEBGL BOTTLE / CAN ON THE SHELF */}
+                            {/* ONLY THIS SPECIFIC PRODUCT REACTS TO HOVER ("hanya di hover per produk saja") */}
+                            <div
+                              onClick={() => {
+                                if (isDoorOpen) handleItemClick(item.id);
+                              }}
+                              onMouseEnter={() => setIsHoveringButton(true)}
+                              onMouseLeave={() => setIsHoveringButton(false)}
+                              className={`w-full flex items-center justify-center transition-all duration-200 ${
+                                isDoorOpen ? 'cursor-pointer hover:scale-115 hover:-translate-y-2 active:scale-95 z-10 hover:z-20 hover:drop-shadow-[0_10px_20px_rgba(6,182,212,0.8)]' : 'opacity-85 z-10'
+                              }`}
+                              title={isDoorOpen ? `Klik untuk inspeksi 3D: ${item.name}` : 'Buka pintu kulkas terlebih dahulu'}
+                            >
+                              <ShelfItem3D item={item} />
+                            </div>
 
-                  {/* AUTHENTIC WHITE WIRE GRILLE REFRIGERATOR RACK */}
-                  <div className="relative w-full">
-                    <div className="h-3 bg-[repeating-linear-gradient(90deg,#cbd5e1,#cbd5e1_2px,transparent_2px,transparent_8px)] bg-white border-y border-slate-300 shadow-[0_6px_12px_rgba(0,0,0,0.2)] rounded-sm flex items-center justify-center">
-                      <div className="bg-white/95 px-2 py-0.2 rounded text-[7px] font-black tracking-wider text-slate-700 uppercase border border-slate-300 shadow-inner">
-                        {shelf.name}
+                            {/* ULTRA-COMPACT CLAMPED MINIMARKET SHELF PRICE TAG (-mt-4.5 & z-[60] GUARANTEES IT STAYS AT THE VERY FRONT OF THE BOTTLES!) */}
+                            {/* COMPLETELY STATIC ON THE WIRE RACK - DOES NOT MOVE OR SHAKE WHEN BOTTLE IS HOVERED! */}
+                            <div className="-mt-4.5 w-[76%] max-w-[50px] bg-[#ffea00] border border-amber-600 rounded-[2.5px] shadow-[0_3px_8px_rgba(0,0,0,0.4)] overflow-hidden text-center flex flex-col relative z-[60] pointer-events-none">
+                              {/* Slim Red Promo Header Strip */}
+                              <div className="bg-red-600 text-white font-black text-[4.5px] uppercase tracking-tighter py-[0.5px] leading-none border-b border-red-800">
+                                ★ PROMO ★
+                              </div>
+                              
+                              {/* Item Name */}
+                              <div className="px-0.5 pt-[1px] text-[4.5px] font-extrabold text-slate-900 leading-none truncate uppercase tracking-tight">
+                                {style.label}
+                              </div>
+                              
+                              {/* Price Box */}
+                              <div className="bg-white/95 mx-[1.5px] my-[1.5px] px-1 py-[1.5px] rounded-[1.5px] border border-amber-400 flex items-center justify-center shadow-inner">
+                                <span className="text-[4.5px] mr-[2px] font-extrabold text-red-600">Rp</span>
+                                <span className="text-[7px] font-black text-slate-950 tracking-tight leading-none">
+                                  {(item.price).toLocaleString('id-ID')}
+                                </span>
+                              </div>
+
+                              {/* Status Badge overlay ONLY when item is out of stock ("HABIS") */}
+                              {!hasStock && (
+                                <div className="absolute inset-0 flex items-center justify-center text-[5.5px] font-black p-0.5 uppercase tracking-tighter text-center bg-rose-700/95 text-white">
+                                  ❌ HABIS
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* AUTHENTIC WHITE WIRE GRILLE REFRIGERATOR RACK */}
+                    <div className="relative w-full">
+                      <div className="h-3 bg-[repeating-linear-gradient(90deg,#cbd5e1,#cbd5e1_2px,transparent_2px,transparent_8px)] bg-white border-y border-slate-300 shadow-[0_6px_12px_rgba(0,0,0,0.2)] rounded-sm flex items-center justify-center">
+                        <div className="bg-white/95 px-2 py-0.2 rounded text-[7px] font-black tracking-wider text-slate-700 uppercase border border-slate-300 shadow-inner">
+                          {shelf.name}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
 
             {/* Bottom quick banner */}
             {currentUser && isDoorOpen && userTransactions.length > 0 && (
@@ -1200,18 +1275,52 @@ export default function SmartFridgeApp() {
             currentUser={currentUser}
             onClose={() => setInspectedItemId(null)}
             onTake={() => {
-              if (currentUser?.role === 'superadmin') {
-                updateStock(inspectedItem.id, 1);
-                setToastMessage({ text: '📦 (+1 pcs) Stok rak bertambah!', type: 'success' });
-              } else {
-                const res = takeItem(inspectedItem.id);
-                setToastMessage({ text: res.message, type: res.success ? 'success' : 'error' });
-              }
+              const res = takeItem(inspectedItem.id);
+              setToastMessage({ text: res.message, type: res.success ? 'success' : 'error' });
               setInspectedItemId(null);
+            }}
+            onEdit={() => {
+              setInspectedItemId(null);
+              setEditingItem(inspectedItem);
+              setShowBeverageBuilder(true);
+            }}
+            onDelete={() => {
+              if (window.confirm(`Yakin ingin menghapus minuman "${inspectedItem.name}" dari katalog kulkas?`)) {
+                const res = deleteItem(inspectedItem.id);
+                setToastMessage({ text: res.message, type: res.success ? 'success' : 'error' });
+                setInspectedItemId(null);
+              }
             }}
           />
         );
       })()}
+
+      {/* =========================================================================================
+          ADMIN LIVE 3D BEVERAGE BUILDER STUDIO MODAL
+          ========================================================================================= */}
+      {showBeverageBuilder && (
+        <BeverageBuilderModal
+          initialItem={editingItem}
+          onSave={(newItem) => {
+            addItem(newItem);
+            setToastMessage({ text: '🎉 Minuman baru berhasil ditambahkan ke rak kulkas!', type: 'success' });
+          }}
+          onUpdate={(id, updated) => {
+            updateItem(id, updated);
+            setToastMessage({ text: '✨ Spesifikasi & warna minuman 3D berhasil diperbarui!', type: 'success' });
+          }}
+          onDelete={(id) => {
+            const res = deleteItem(id);
+            setToastMessage({ text: res.message, type: res.success ? 'success' : 'error' });
+            setShowBeverageBuilder(false);
+            setEditingItem(null);
+          }}
+          onClose={() => {
+            setShowBeverageBuilder(false);
+            setEditingItem(null);
+          }}
+        />
+      )}
 
     </div>
   );

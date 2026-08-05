@@ -28,6 +28,16 @@
   animation: pulse-frost 4s infinite ease-in-out;
 }
 
+/* Explicit spin keyframe for analog wall clock second hand */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* Custom elegant scrollbar for fridge shelves */
 ::-webkit-scrollbar {
   width: 8px;

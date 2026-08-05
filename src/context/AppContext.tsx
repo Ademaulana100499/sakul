@@ -14,6 +14,8 @@ interface AppContextType {
   takeItem: (itemId: string) => { success: boolean; message: string };
   updateStock: (itemId: string, delta: number) => void;
   addItem: (newItem: Omit<Item, 'id'>) => void;
+  updateItem: (itemId: string, updatedItem: Partial<Item>) => void;
+  deleteItem: (itemId: string) => { success: boolean; message: string };
   resetToDefault: () => void;
   isClient: boolean;
 }
@@ -144,6 +146,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setItems(prev => [item, ...prev]);
   };
 
+  const updateItem = (itemId: string, updatedItem: Partial<Item>) => {
+    setItems(prev => prev.map(item => item.id === itemId ? { ...item, ...updatedItem } : item));
+  };
+
+  const deleteItem = (itemId: string) => {
+    const target = items.find(i => i.id === itemId);
+    if (!target) return { success: false, message: 'Barang tidak ditemukan!' };
+
+    setItems(prev => prev.filter(i => i.id !== itemId));
+    return { success: true, message: `Berhasil menghapus produk "${target.name}" dari katalog kulkas!` };
+  };
+
   const resetToDefault = () => {
     setUsers(INITIAL_USERS);
     setItems(INITIAL_ITEMS);
@@ -166,6 +180,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       takeItem,
       updateStock,
       addItem,
+      updateItem,
+      deleteItem,
       resetToDefault,
       isClient
     }}>

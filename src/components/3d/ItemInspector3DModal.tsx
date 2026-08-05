@@ -11,6 +11,8 @@ interface ItemInspectorProps {
   currentUser: User | null;
   onClose: () => void;
   onTake: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
 interface DrinkMeshProps {
@@ -38,11 +40,6 @@ export function DrinkMesh3D({ item, isMini = false }: DrinkMeshProps) {
   });
 
   const name = item.name.toLowerCase();
-  
-  // Classify beverage form-factors
-  const isCan = name.includes('kaleng') || name.includes('nescafe') || name.includes('panda');
-  const isBox = name.includes('ultra');
-  const isYakult = name.includes('yakult');
 
   // Authentic Indonesian Real-Market Brand Colors & Material Styling
   let bodyColor = "#0284c7";
@@ -118,6 +115,23 @@ export function DrinkMesh3D({ item, isMini = false }: DrinkMeshProps) {
     bodyColor = "#e0f2fe"; labelColor = "#0284c7"; stripeColor = "#ffffff"; capColor = "#1d4ed8"; 
     metal = 0.15; rough = 0.05; trans = 0.88; 
   }
+
+  // Override with Admin custom dynamic style3D if present!
+  if (item.style3D) {
+    const s = item.style3D;
+    bodyColor = s.bodyColor;
+    labelColor = s.labelColor;
+    stripeColor = s.stripeColor;
+    if (s.capColor) capColor = s.capColor;
+    metal = s.metal;
+    rough = s.rough;
+    trans = s.trans;
+  }
+
+  // Classify beverage form-factors (override with dynamic style3D shape if specified!)
+  const isCan = item.style3D ? item.style3D.shape === 'can' : (name.includes('kaleng') || name.includes('nescafe') || name.includes('panda'));
+  const isBox = item.style3D ? item.style3D.shape === 'box' : name.includes('ultra');
+  const isYakult = item.style3D ? item.style3D.shape === 'yakult' : name.includes('yakult');
 
   return (
     <group ref={meshRef} position={[0, 0, 0]}>
@@ -275,7 +289,7 @@ export function ShelfItem3D({ item }: { item: Item }) {
   }
 
   return (
-    <div className="w-14 h-17 sm:w-16 sm:h-20 relative flex items-center justify-center pointer-events-none">
+    <div className="w-13 h-[58px] sm:w-[58px] sm:h-[68px] relative flex items-center justify-center pointer-events-none shrink-0">
       <Canvas camera={{ position: [0, 0.15, 3.8], fov: 36 }} style={{ pointerEvents: 'none' }}>
         <ambientLight intensity={2.8} />
         <directionalLight position={[5, 8, 6]} intensity={3.5} />
@@ -296,7 +310,7 @@ export function ShelfItem3D({ item }: { item: Item }) {
 /**
  * TRIPLE-A GAMING 3D ITEM INSPECTION MODAL ("AMBIL INI ATAU GK DEH")
  */
-export default function ItemInspector3DModal({ item, currentUser, onClose, onTake }: ItemInspectorProps) {
+export default function ItemInspector3DModal({ item, currentUser, onClose, onTake, onEdit, onDelete }: ItemInspectorProps) {
   const [mounted, setMounted] = useState(false);
   const isSuperAdmin = currentUser?.role === 'superadmin';
   const canAfford = currentUser ? currentUser.currentBalance >= item.price : false;
@@ -324,14 +338,21 @@ export default function ItemInspector3DModal({ item, currentUser, onClose, onTak
           {item.name}
         </h2>
 
-        {/* Authentic Minimarket Price Label Badge (Alfamart / Indomaret Style) */}
-        <div className="inline-flex items-center bg-[#ffea00] border-2 border-amber-600 rounded-xl px-5 py-1 sm:py-1.5 shadow-[0_15px_35px_rgba(0,0,0,0.6)] text-slate-950 transform -rotate-1 pointer-events-auto hover:scale-105 transition-transform">
+        <div className="inline-flex items-center bg-[#ffea00] border-2 border-amber-600 rounded-xl px-5 py-1 sm:py-1.5 shadow-[0_15px_35px_rgba(0,0,0,0.6)] text-slate-950 transform -rotate-1 pointer-events-auto hover:scale-105 transition-transform mb-2">
           <span className="bg-red-600 text-white text-[10px] sm:text-xs font-black uppercase px-2 py-0.5 rounded mr-3 shadow-xs">
             ★ PROMO MINIMARKET ★
           </span>
           <span className="font-extrabold text-base sm:text-lg mr-1 text-red-700">Rp</span>
           <span className="text-2xl sm:text-3xl font-black tracking-tight">{item.price.toLocaleString('id-ID')}</span>
         </div>
+
+        {/* Dynamic Marketing Tagline & HP Boost Badge */}
+        {item.style3D && (item.style3D.hpBoost || item.style3D.tagline) && (
+          <div className="max-w-md bg-zinc-900/95 border border-amber-400 text-slate-200 p-2 rounded-xl text-xs shadow-lg transform translate-y-1 z-30 pointer-events-auto">
+            {item.style3D.hpBoost && <div className="text-amber-300 font-black mb-0.5">{item.style3D.hpBoost}</div>}
+            {item.style3D.tagline && <div className="text-[11px] italic text-slate-300">"{item.style3D.tagline}"</div>}
+          </div>
+        )}
       </div>
 
       {/* CENTER STAGE: MASSIVE TRUE 3D WEBGL ROTATABLE MESH */}
@@ -362,41 +383,65 @@ export default function ItemInspector3DModal({ item, currentUser, onClose, onTak
       <div className="z-20 mb-2 sm:mb-6 flex flex-col items-center w-full max-w-xl pointer-events-auto shrink-0">
         <div className="flex items-center justify-between w-full text-xs sm:text-sm font-bold text-slate-200 bg-slate-900/85 backdrop-blur-md px-6 py-2.5 rounded-full border border-slate-700 shadow-xl mb-3">
           <span>📦 Stok Rak: <strong className="text-white font-black text-sm sm:text-base">{item.stock} pcs</strong></span>
-          {currentUser && (
-            <span>💰 Saldo Anda: <strong className={`font-black text-sm sm:text-base ${!canAfford && !isSuperAdmin ? 'text-rose-400 font-extrabold animate-pulse' : 'text-emerald-400'}`}>Rp {currentUser.currentBalance.toLocaleString('id-ID')} {!isSuperAdmin && (!canAfford ? '(❌ Kurang)' : '(✅ Cukup)')}</strong></span>
-          )}
+          {isSuperAdmin ? (
+            <span>👑 Mode Admin: <strong className="text-amber-400 font-black">Inspeksi & Kelola Produk</strong></span>
+          ) : currentUser ? (
+            <span>💰 Saldo Anda: <strong className={`font-black text-sm sm:text-base ${!canAfford ? 'text-rose-400 font-extrabold animate-pulse' : 'text-emerald-400'}`}>Rp {currentUser.currentBalance.toLocaleString('id-ID')} {!canAfford ? '(❌ Kurang)' : '(✅ Cukup)'}</strong></span>
+          ) : null}
         </div>
 
-        <div className="grid grid-cols-2 gap-4 sm:gap-6 w-full px-2">
-          {/* 🔴 TOMBOL GAK DEH (CANCEL / RETURN TO SHELF) */}
-          <button
-            onClick={onClose}
-            className="bg-slate-900 hover:bg-rose-600 text-slate-200 hover:text-white border-2 border-slate-700 hover:border-rose-400 font-black py-3.5 sm:py-5 px-6 rounded-2xl shadow-[0_10px_35px_rgba(0,0,0,0.7)] transition-all duration-200 transform active:scale-95 flex items-center justify-center space-x-2 sm:space-x-3 text-base sm:text-2xl uppercase tracking-wider group hover:scale-105 cursor-pointer"
-          >
-            <span className="text-xl sm:text-3xl group-hover:scale-125 transition-transform">🙅‍♂️</span>
-            <span>Gk deh...</span>
-          </button>
+        {isSuperAdmin ? (
+          <div className="grid grid-cols-2 gap-4 sm:gap-6 w-full px-2">
+            {/* 🔴 TOMBOL GAK DEH (CANCEL / RETURN TO SHELF) */}
+            <button
+              onClick={onClose}
+              className="bg-slate-900 hover:bg-slate-800 text-slate-200 hover:text-white border-2 border-slate-700 font-black py-3.5 sm:py-5 px-6 rounded-2xl shadow-[0_10px_35px_rgba(0,0,0,0.7)] transition-all duration-200 transform active:scale-95 flex items-center justify-center space-x-2 sm:space-x-3 text-base sm:text-2xl uppercase tracking-wider group hover:scale-105 cursor-pointer"
+            >
+              <span className="text-xl sm:text-3xl group-hover:scale-125 transition-transform">🙅‍♂️</span>
+              <span>Gk deh...</span>
+            </button>
 
-          {/* 🟢 TOMBOL AMBIL INI! */}
-          <button
-            disabled={!hasStock || (!canAfford && !isSuperAdmin)}
-            onClick={onTake}
-            className={`font-black py-3.5 sm:py-5 px-4 rounded-2xl shadow-2xl transition-all duration-200 transform active:scale-95 flex items-center justify-center space-x-2 sm:space-x-3 text-base sm:text-2xl uppercase tracking-wider border-2 hover:scale-105 cursor-pointer ${
-              !hasStock 
-                ? 'bg-rose-950 text-rose-300 border-rose-600 opacity-85 cursor-not-allowed'
-                : !canAfford && !isSuperAdmin
-                ? 'bg-amber-950 text-amber-300 border-amber-500 opacity-90 cursor-not-allowed shadow-[0_0_20px_rgba(245,158,11,0.4)]'
-                : 'bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-600 hover:from-emerald-400 hover:to-teal-300 text-zinc-950 border-emerald-200 shadow-[0_0_45px_rgba(16,185,129,0.75)]'
-            }`}
-          >
-            <span className="text-xl sm:text-3xl">
-              {isSuperAdmin ? '📦' : !hasStock ? '❌' : !canAfford ? '🚫' : '🤤'}
-            </span>
-            <span>
-              {isSuperAdmin ? '+1 Stok Item' : !hasStock ? 'Stok Habis' : !canAfford ? 'Saldo Kurang' : 'Ambil Ini!'}
-            </span>
-          </button>
-        </div>
+            {/* 🟡 TOMBOL EDIT / TAMBAH STOK */}
+            <button
+              onClick={onEdit}
+              className="bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 border-2 border-amber-200 font-black py-3.5 sm:py-5 px-6 rounded-2xl shadow-[0_0_45px_rgba(245,158,11,0.65)] transition-all duration-200 transform active:scale-95 flex items-center justify-center space-x-2 sm:space-x-3 text-base sm:text-2xl uppercase tracking-wider hover:scale-105 cursor-pointer"
+            >
+              <span className="text-xl sm:text-3xl">✏️</span>
+              <span>Edit Minuman</span>
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-4 sm:gap-6 w-full px-2">
+            {/* 🔴 TOMBOL GAK DEH (CANCEL / RETURN TO SHELF) */}
+            <button
+              onClick={onClose}
+              className="bg-slate-900 hover:bg-rose-600 text-slate-200 hover:text-white border-2 border-slate-700 hover:border-rose-400 font-black py-3.5 sm:py-5 px-6 rounded-2xl shadow-[0_10px_35px_rgba(0,0,0,0.7)] transition-all duration-200 transform active:scale-95 flex items-center justify-center space-x-2 sm:space-x-3 text-base sm:text-2xl uppercase tracking-wider group hover:scale-105 cursor-pointer"
+            >
+              <span className="text-xl sm:text-3xl group-hover:scale-125 transition-transform">🙅‍♂️</span>
+              <span>Gk deh...</span>
+            </button>
+
+            {/* 🟢 TOMBOL AMBIL INI! */}
+            <button
+              disabled={!hasStock || !canAfford}
+              onClick={onTake}
+              className={`font-black py-3.5 sm:py-5 px-4 rounded-2xl shadow-2xl transition-all duration-200 transform active:scale-95 flex items-center justify-center space-x-2 sm:space-x-3 text-base sm:text-2xl uppercase tracking-wider border-2 hover:scale-105 cursor-pointer ${
+                !hasStock 
+                  ? 'bg-rose-950 text-rose-300 border-rose-600 opacity-85 cursor-not-allowed'
+                  : !canAfford
+                  ? 'bg-amber-950 text-amber-300 border-amber-500 opacity-90 cursor-not-allowed shadow-[0_0_20px_rgba(245,158,11,0.4)]'
+                  : 'bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-600 hover:from-emerald-400 hover:to-teal-300 text-zinc-950 border-emerald-200 shadow-[0_0_45px_rgba(16,185,129,0.75)]'
+              }`}
+            >
+              <span className="text-xl sm:text-3xl">
+                {!hasStock ? '❌' : !canAfford ? '🚫' : '🤤'}
+              </span>
+              <span>
+                {!hasStock ? 'Stok Habis' : !canAfford ? 'Saldo Kurang' : 'Ambil Ini!'}
+              </span>
+            </button>
+          </div>
+        )}
       </div>
 
     </div>
