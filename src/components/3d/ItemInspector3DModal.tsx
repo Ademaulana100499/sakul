@@ -451,7 +451,7 @@ export default function ItemInspector3DModal({ item, currentUser, onClose, onTak
   if (!mounted) return null;
 
   return (
-    <div className="fixed inset-0 z-[150] bg-slate-950/92 backdrop-blur-xl flex flex-col justify-between items-center p-4 sm:p-8 select-none overflow-hidden animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[150] bg-slate-950/92 backdrop-blur-xl flex flex-col justify-between items-center p-3 sm:p-8 select-none overflow-hidden animate-in fade-in duration-200">
       
       {/* Ambient Radial Cyber Halo in Background */}
       <div className="absolute w-[650px] h-[650px] rounded-full bg-[radial-gradient(circle,rgba(6,182,212,0.2)_0%,transparent_70%)] pointer-events-none animate-pulse"></div>
@@ -462,11 +462,11 @@ export default function ItemInspector3DModal({ item, currentUser, onClose, onTak
           <span>✋ SENTUH / GESER OBJEK UNTUK MEMUTAR 3D 360°</span>
         </div>
         
-        <h2 className="text-2xl sm:text-5xl font-black text-white uppercase tracking-tight drop-shadow-[0_6px_15px_rgba(0,0,0,0.9)] mb-2">
+        <h2 className="text-xl sm:text-5xl font-black text-white uppercase tracking-tight drop-shadow-[0_6px_15px_rgba(0,0,0,0.9)] mb-2">
           {item.name}
         </h2>
 
-        <div className="inline-flex items-center bg-[#ffea00] border-2 border-amber-600 rounded-xl px-5 py-1 sm:py-1.5 shadow-[0_15px_35px_rgba(0,0,0,0.6)] text-slate-950 transform -rotate-1 pointer-events-auto hover:scale-105 transition-transform mb-2">
+        <div className="inline-flex items-center bg-[#ffea00] border-2 border-amber-600 rounded-xl px-3 sm:px-5 py-1 sm:py-1.5 shadow-[0_15px_35px_rgba(0,0,0,0.6)] text-slate-950 transform -rotate-1 pointer-events-auto hover:scale-105 transition-transform mb-2">
           <span className="bg-red-600 text-white text-[10px] sm:text-xs font-black uppercase px-2 py-0.5 rounded mr-3 shadow-xs">
             ★ PROMO MINIMARKET ★
           </span>
@@ -509,7 +509,7 @@ export default function ItemInspector3DModal({ item, currentUser, onClose, onTak
 
       {/* BOTTOM FLOATING ACTION CONTROLLER: "AMBIL INI ATAU GK DEH" */}
       <div className="z-20 mb-2 sm:mb-6 flex flex-col items-center w-full max-w-xl pointer-events-auto shrink-0">
-        <div className="flex items-center justify-between w-full text-xs sm:text-sm font-bold text-slate-200 bg-slate-900/85 backdrop-blur-md px-6 py-2.5 rounded-full border border-slate-700 shadow-xl mb-3">
+        <div className="flex items-center justify-between w-full text-[10px] sm:text-sm font-bold text-slate-200 bg-slate-900/85 backdrop-blur-md px-3 sm:px-6 py-2 sm:py-2.5 rounded-full border border-slate-700 shadow-xl mb-2 sm:mb-3">
           <span>📦 Stok Rak: <strong className="text-white font-black text-sm sm:text-base">{item.stock} pcs</strong></span>
           {isSuperAdmin ? (
             <span>👑 Mode Admin: <strong className="text-amber-400 font-black">Inspeksi & Kelola Produk</strong></span>
@@ -519,11 +519,11 @@ export default function ItemInspector3DModal({ item, currentUser, onClose, onTak
         </div>
 
         {isSuperAdmin ? (
-          <div className="grid grid-cols-2 gap-4 sm:gap-6 w-full px-2">
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-6 w-full px-1 sm:px-2">
             {/* 🔴 TOMBOL GAK DEH (CANCEL / RETURN TO SHELF) */}
             <button
               onClick={onClose}
-              className="bg-slate-900 hover:bg-slate-800 text-slate-200 hover:text-white border-2 border-slate-700 font-black py-3.5 sm:py-5 px-6 rounded-2xl shadow-[0_10px_35px_rgba(0,0,0,0.7)] transition-all duration-200 transform active:scale-95 flex items-center justify-center space-x-2 sm:space-x-3 text-base sm:text-2xl uppercase tracking-wider group hover:scale-105 cursor-pointer"
+              className="bg-slate-900 hover:bg-slate-800 text-slate-200 hover:text-white border-2 border-slate-700 font-black py-2.5 sm:py-5 px-3 sm:px-6 rounded-2xl shadow-[0_10px_35px_rgba(0,0,0,0.7)] transition-all duration-200 transform active:scale-95 flex items-center justify-center space-x-1.5 sm:space-x-3 text-sm sm:text-2xl uppercase tracking-wider group hover:scale-105 cursor-pointer"
             >
               <span className="text-xl sm:text-3xl group-hover:scale-125 transition-transform">🙅‍♂️</span>
               <span>Gk deh...</span>
@@ -532,18 +532,18 @@ export default function ItemInspector3DModal({ item, currentUser, onClose, onTak
             {/* 🟡 TOMBOL EDIT / TAMBAH STOK */}
             <button
               onClick={onEdit}
-              className="bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 border-2 border-amber-200 font-black py-3.5 sm:py-5 px-6 rounded-2xl shadow-[0_0_45px_rgba(245,158,11,0.65)] transition-all duration-200 transform active:scale-95 flex items-center justify-center space-x-2 sm:space-x-3 text-base sm:text-2xl uppercase tracking-wider hover:scale-105 cursor-pointer"
+              className="bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 hover:from-amber-300 hover:to-yellow-300 text-slate-950 border-2 border-amber-200 font-black py-2.5 sm:py-5 px-3 sm:px-6 rounded-2xl shadow-[0_0_45px_rgba(245,158,11,0.65)] transition-all duration-200 transform active:scale-95 flex items-center justify-center space-x-1.5 sm:space-x-3 text-sm sm:text-2xl uppercase tracking-wider hover:scale-105 cursor-pointer"
             >
               <span className="text-xl sm:text-3xl">✏️</span>
               <span>Edit Minuman</span>
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4 sm:gap-6 w-full px-2">
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-6 w-full px-1 sm:px-2">
             {/* 🔴 TOMBOL GAK DEH (CANCEL / RETURN TO SHELF) */}
             <button
               onClick={onClose}
-              className="bg-slate-900 hover:bg-rose-600 text-slate-200 hover:text-white border-2 border-slate-700 hover:border-rose-400 font-black py-3.5 sm:py-5 px-6 rounded-2xl shadow-[0_10px_35px_rgba(0,0,0,0.7)] transition-all duration-200 transform active:scale-95 flex items-center justify-center space-x-2 sm:space-x-3 text-base sm:text-2xl uppercase tracking-wider group hover:scale-105 cursor-pointer"
+              className="bg-slate-900 hover:bg-rose-600 text-slate-200 hover:text-white border-2 border-slate-700 hover:border-rose-400 font-black py-2.5 sm:py-5 px-3 sm:px-6 rounded-2xl shadow-[0_10px_35px_rgba(0,0,0,0.7)] transition-all duration-200 transform active:scale-95 flex items-center justify-center space-x-1.5 sm:space-x-3 text-sm sm:text-2xl uppercase tracking-wider group hover:scale-105 cursor-pointer"
             >
               <span className="text-xl sm:text-3xl group-hover:scale-125 transition-transform">🙅‍♂️</span>
               <span>Gk deh...</span>
@@ -553,7 +553,7 @@ export default function ItemInspector3DModal({ item, currentUser, onClose, onTak
             <button
               disabled={!hasStock || !canAfford}
               onClick={onTake}
-              className={`font-black py-3.5 sm:py-5 px-4 rounded-2xl shadow-2xl transition-all duration-200 transform active:scale-95 flex items-center justify-center space-x-2 sm:space-x-3 text-base sm:text-2xl uppercase tracking-wider border-2 hover:scale-105 cursor-pointer ${
+              className={`font-black py-2.5 sm:py-5 px-3 sm:px-4 rounded-2xl shadow-2xl transition-all duration-200 transform active:scale-95 flex items-center justify-center space-x-1.5 sm:space-x-3 text-sm sm:text-2xl uppercase tracking-wider border-2 hover:scale-105 cursor-pointer ${
                 !hasStock 
                   ? 'bg-rose-950 text-rose-300 border-rose-600 opacity-85 cursor-not-allowed'
                   : !canAfford

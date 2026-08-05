@@ -19,22 +19,22 @@ export default function LoginView({ onOpenDoor, isOpening }: LoginViewProps) {
   const employeeUsers = users.filter(u => u.role === 'user');
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-sky-50 via-slate-100 to-cyan-100 text-slate-900 flex items-center justify-center p-4 lg:p-10 font-sans relative overflow-hidden">
+    <div className="min-h-screen w-full bg-gradient-to-br from-sky-50 via-slate-100 to-cyan-100 text-slate-900 flex items-center justify-center p-3 sm:p-4 lg:p-10 font-sans relative overflow-hidden">
       {/* Cool ambient frost highlights */}
       <div className="absolute -top-32 -left-32 w-96 h-96 bg-cyan-400/20 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-sky-500/20 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div className="w-full max-w-6xl relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+      <div className="w-full max-w-6xl relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-10 items-center">
         
         {/* LEFT COLUMN: Bright Glass Crystal Portal */}
-        <div className="lg:col-span-6 space-y-7">
+        <div className="lg:col-span-6 space-y-4 sm:space-y-7">
           <div className="space-y-3">
             <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-sky-600/10 border border-sky-400/40 text-sky-800 text-xs font-extrabold tracking-wide shadow-sm">
               <span>🧊 SHOWCASE KULKAS MINUMAN KANTOR</span>
               <span>•</span>
               <span className="text-emerald-700">3D LIVE</span>
             </div>
-            <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-slate-900 leading-tight">
+            <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-slate-900 leading-tight">
               SAKUL <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-600 to-cyan-600">SHOWCASE</span>
             </h1>
             <p className="text-slate-600 text-sm font-medium max-w-md leading-relaxed">
@@ -43,7 +43,7 @@ export default function LoginView({ onOpenDoor, isOpening }: LoginViewProps) {
           </div>
 
           {/* Clean Crystal Acrylic Portal Panel */}
-          <div className="bg-white/85 border-2 border-white backdrop-blur-2xl rounded-3xl p-7 shadow-[0_20px_60px_rgba(14,116,144,0.15)] space-y-6 relative overflow-hidden">
+          <div className="bg-white/85 border-2 border-white backdrop-blur-2xl rounded-2xl sm:rounded-3xl p-4 sm:p-7 shadow-[0_20px_60px_rgba(14,116,144,0.15)] space-y-4 sm:space-y-6 relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-sky-400 via-cyan-500 to-blue-600"></div>
 
             <div className="space-y-1">

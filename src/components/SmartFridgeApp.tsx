@@ -250,18 +250,20 @@ export default function SmartFridgeApp() {
       setShowAuthPrompt(false);
       setEnteredPin('');
       setPinError(false);
-      setIsDoorUnlocked(true);
-      setIsDoorOpen(true);
+      setIsPinVerified(true);
+      setIsGantengFound(false);
+      setIsDoorUnlocked(false);
+      setIsDoorOpen(false);
 
       if (matchedUser.role === 'superadmin') {
         setToastMessage({
-          text: `👑 Selamat Datang Super Admin! Pintu kulkas terbuka lebar untuk kelola stok & user.`,
-          type: 'success'
+          text: `👑 PIN ADMIN DITERIMA! TAPI TUNGGU: Sebelum pintu kulkas bisa dibuka, CARI & KLIK/HOVER DULU "ORANG GANTENG" yang lagi ngintip di ruangan ini! 👀✨`,
+          type: 'info'
         });
       } else {
         setToastMessage({
-          text: `🟢 PIN DITERIMA! Selamat datang ${matchedUser.name}, saldo Anda: Rp ${matchedUser.currentBalance.toLocaleString('id-ID')}. Pintu kulkas terbuka! 🥤`,
-          type: 'success'
+          text: `🔥 PIN BENAR! Halo ${matchedUser.name} (Saldo: Rp ${matchedUser.currentBalance.toLocaleString('id-ID')})! TAPI TUNGGU: CARI & KLIK/HOVER DULU "ORANG GANTENG" yang lagi ngintip rahasia di ruangan ini untuk membuka gembok kulkas! 👀✨`,
+          type: 'info'
         });
       }
       return;
@@ -270,7 +272,7 @@ export default function SmartFridgeApp() {
     // Wrong pin!
     setPinError(true);
     setToastMessage({
-      text: '❌ PIN SALAH / TIDAK TERDAFTAR! Silakan cek PIN Anda di daftar user atau hubungi Admin.',
+      text: '❌ PIN SALAH / TIDAK TERDAFTAR! Silakan periksa 6 digit PIN Anda.',
       type: 'error'
     });
     setTimeout(() => {
@@ -284,7 +286,7 @@ export default function SmartFridgeApp() {
       setIsGantengFound(true);
       setIsDoorUnlocked(true);
       setToastMessage({
-        text: '🎉 HORE! Si Orang Ganteng ketangkap basah! ("Yahh ketauannn 🤪"). 🟢 Gembok Kulkas resmi TERBUKA! Silakan tarik gagang pintu sekarang!',
+        text: '🎉 HORE! Si Orang Ganteng ketangkap basah! ("Yahh ketauannn 🤪"). 🟢 Gembok Kulkas resmi TERBUKA! Silakan tarik gagang pintu sekarang untuk membuka kulkas! 🚪🥤',
         type: 'success'
       });
     }
@@ -396,13 +398,15 @@ export default function SmartFridgeApp() {
   if (!isClient) return null;
 
   return (
-    <div className="h-screen w-screen bg-stone-100 p-2 sm:p-4 flex items-center justify-center font-sans select-none overflow-hidden relative cursor-none">
+    <div className="h-screen w-screen bg-stone-100 p-1.5 sm:p-4 flex items-center justify-center font-sans select-none overflow-hidden relative sm:cursor-none">
       
-      {/* ABSOLUTE GLOBAL CURSOR OVERRIDE - DESTROYS SYSTEM CURSOR ON EVERY BUTTON, INPUT & ELEMENT 100% */}
+      {/* ABSOLUTE GLOBAL CURSOR OVERRIDE - ONLY ON DESKTOP (hover-capable devices, NOT mobile touch!) */}
       <style dangerouslySetInnerHTML={{
         __html: `
-          *, *::before, *::after, button, [role="button"], a, input, select, textarea, div, span, table, tr, td, th {
-            cursor: none !important;
+          @media (hover: hover) and (pointer: fine) {
+            *, *::before, *::after, button, [role="button"], a, input, select, textarea, div, span, table, tr, td, th {
+              cursor: none !important;
+            }
           }
         `
       }} />
@@ -727,7 +731,7 @@ export default function SmartFridgeApp() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.65, opacity: 0 }}
               transition={{ type: 'spring', damping: 16, stiffness: 280 }}
-              className={`max-w-[480px] w-auto py-4 px-5 rounded-3xl backdrop-blur-2xl border-[3px] flex flex-col space-y-3 text-left pointer-events-auto shadow-2xl ${
+              className={`max-w-[92vw] sm:max-w-[480px] w-auto py-3 sm:py-4 px-4 sm:px-5 rounded-2xl sm:rounded-3xl backdrop-blur-2xl border-2 sm:border-[3px] flex flex-col space-y-2 sm:space-y-3 text-left pointer-events-auto shadow-2xl ${
                 toastMessage.type === 'success'
                   ? 'bg-zinc-950 border-emerald-400 text-emerald-200 shadow-emerald-500/20'
                   : toastMessage.type === 'error'
@@ -739,7 +743,7 @@ export default function SmartFridgeApp() {
                 <span className="text-3xl sm:text-4xl shrink-0 filter drop-shadow animate-pulse">
                   {toastMessage.type === 'success' ? '🎉' : toastMessage.type === 'error' ? '🚨' : '⚡'}
                 </span>
-                <div className="text-xs sm:text-[13.5px] font-black leading-snug text-white tracking-tight flex-1">{toastMessage.text}</div>
+                <div className="text-[11.5px] sm:text-[13.5px] font-black leading-snug text-white tracking-tight flex-1">{toastMessage.text}</div>
               </div>
               <div className="flex justify-end pt-1 border-t border-white/10">
                 <button
@@ -766,7 +770,7 @@ export default function SmartFridgeApp() {
       {/* =========================================================================================
           MASTER MOBILE-DEDICATED 3D COMMERCIAL COOLER (FIXED MAX-W-[380PX]) - STANDS OUT IN BRIGHT ROOM!
           ========================================================================================= */}
-      <div className="w-full max-w-[370px] sm:max-w-[380px] h-[770px] sm:h-[820px] max-h-[96vh] rounded-[26px] bg-zinc-950 border-[12px] sm:border-[14px] border-zinc-900 shadow-[0_35px_90px_rgba(0,0,0,0.65),0_0_60px_rgba(251,191,36,0.12)] relative overflow-hidden flex flex-col z-10 mx-auto group">
+      <div className="w-full max-w-[370px] sm:max-w-[380px] h-[94vh] sm:h-[820px] max-h-[96vh] rounded-[18px] sm:rounded-[26px] bg-zinc-950 border-[8px] sm:border-[14px] border-zinc-900 shadow-[0_35px_90px_rgba(0,0,0,0.65),0_0_60px_rgba(251,191,36,0.12)] relative overflow-hidden flex flex-col z-10 mx-auto group">
         
         {/* 1. TOP WHITE ILLUMINATED LIGHTBOX SIGN (ALWAYS STATIC & UNCOVERED BY DOOR!) */}
         <div className="bg-zinc-950 p-2 shrink-0 border-b-[6px] border-zinc-900 z-40">
@@ -841,10 +845,10 @@ export default function SmartFridgeApp() {
                 </div>
 
                 <div className="flex space-x-1 border-b border-slate-300 pb-1 shrink-0">
-                  <button onClick={() => setShowAdminTab('stock')} onMouseEnter={() => setIsHoveringButton(true)} onMouseLeave={() => setIsHoveringButton(false)} className={`flex-1 py-1 rounded font-black text-[9px] ${showAdminTab === 'stock' ? 'bg-amber-400 text-zinc-950' : 'bg-slate-200 text-slate-700'}`}>📦 Stok</button>
-                  <button onClick={() => setShowAdminTab('rekap')} onMouseEnter={() => setIsHoveringButton(true)} onMouseLeave={() => setIsHoveringButton(false)} className={`flex-1 py-1 rounded font-black text-[9px] ${showAdminTab === 'rekap' ? 'bg-amber-400 text-zinc-950' : 'bg-slate-200 text-slate-700'}`}>📊 Rekap</button>
-                  <button onClick={() => setShowAdminTab('history')} onMouseEnter={() => setIsHoveringButton(true)} onMouseLeave={() => setIsHoveringButton(false)} className={`flex-1 py-1 rounded font-black text-[9px] ${showAdminTab === 'history' ? 'bg-amber-400 text-zinc-950' : 'bg-slate-200 text-slate-700'}`}>📜 Log</button>
-                  <button onClick={() => setShowAdminTab('users')} onMouseEnter={() => setIsHoveringButton(true)} onMouseLeave={() => setIsHoveringButton(false)} className={`flex-1 py-1 rounded font-black text-[9px] ${showAdminTab === 'users' ? 'bg-amber-400 text-zinc-950' : 'bg-slate-200 text-slate-700'}`}>👤 User</button>
+                  <button onClick={() => setShowAdminTab('stock')} onMouseEnter={() => setIsHoveringButton(true)} onMouseLeave={() => setIsHoveringButton(false)} className={`flex-1 py-1.5 sm:py-1 min-h-[28px] rounded font-black text-[9px] ${showAdminTab === 'stock' ? 'bg-amber-400 text-zinc-950' : 'bg-slate-200 text-slate-700'}`}>📦 Stok</button>
+                  <button onClick={() => setShowAdminTab('rekap')} onMouseEnter={() => setIsHoveringButton(true)} onMouseLeave={() => setIsHoveringButton(false)} className={`flex-1 py-1.5 sm:py-1 min-h-[28px] rounded font-black text-[9px] ${showAdminTab === 'rekap' ? 'bg-amber-400 text-zinc-950' : 'bg-slate-200 text-slate-700'}`}>📊 Rekap</button>
+                  <button onClick={() => setShowAdminTab('history')} onMouseEnter={() => setIsHoveringButton(true)} onMouseLeave={() => setIsHoveringButton(false)} className={`flex-1 py-1.5 sm:py-1 min-h-[28px] rounded font-black text-[9px] ${showAdminTab === 'history' ? 'bg-amber-400 text-zinc-950' : 'bg-slate-200 text-slate-700'}`}>📜 Log</button>
+                  <button onClick={() => setShowAdminTab('users')} onMouseEnter={() => setIsHoveringButton(true)} onMouseLeave={() => setIsHoveringButton(false)} className={`flex-1 py-1.5 sm:py-1 min-h-[28px] rounded font-black text-[9px] ${showAdminTab === 'users' ? 'bg-amber-400 text-zinc-950' : 'bg-slate-200 text-slate-700'}`}>👤 User</button>
                 </div>
 
                 {showAdminTab === 'rekap' && (
@@ -1084,7 +1088,7 @@ export default function SmartFridgeApp() {
             }}
             transition={{ duration: 0.85, type: 'spring', damping: 16, stiffness: 60 }}
             style={{ transformOrigin: 'left center', transformStyle: 'preserve-3d' }}
-            className="absolute inset-0 z-30 flex flex-col justify-between p-3 bg-white/[0.08] backdrop-blur-[2.5px] border-[12px] sm:border-[14px] border-zinc-900 shadow-[inset_0_0_50px_rgba(255,255,255,0.45),inset_0_0_20px_rgba(186,230,253,0.35)] rounded-none select-none pointer-events-auto"
+            className="absolute inset-0 z-30 flex flex-col justify-between p-3 bg-white/[0.08] backdrop-blur-[2.5px] border-[8px] sm:border-[14px] border-zinc-900 shadow-[inset_0_0_50px_rgba(255,255,255,0.45),inset_0_0_20px_rgba(186,230,253,0.35)] rounded-none select-none pointer-events-auto"
           >
             {/* Frosted Dewy Condensation Mist */}
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,rgba(255,255,255,0.18)_100%)] bg-gradient-to-tr from-transparent via-white/10 to-white/25 pointer-events-none"></div>
@@ -1129,9 +1133,9 @@ export default function SmartFridgeApp() {
             <div className="h-1 w-full bg-zinc-900 rounded-full shadow-inner border-t border-black"></div>
             <div className="h-1 w-full bg-zinc-900 rounded-full shadow-inner border-t border-black"></div>
           </div>
-          <div className="flex items-center justify-between text-zinc-500 font-sans text-[8px] font-extrabold">
+          <div className="flex items-center justify-between text-zinc-500 font-sans text-[7px] sm:text-[8px] font-extrabold">
             <span>❄️ COMPRESSOR: 2.0°C AUTO</span>
-            <span className="text-emerald-500">14 PEGAWAI ONLINE</span>
+            <span className="text-emerald-500">{employeeUsers.length} PEGAWAI TERDAFTAR</span>
           </div>
         </footer>
 
@@ -1149,7 +1153,7 @@ export default function SmartFridgeApp() {
               className="absolute inset-0 z-50 flex items-center justify-center p-3 pointer-events-none"
             >
               {/* Game HUD Digital Vault Keypad Card (Super Compact, Hilarious, No Cheat Sheet) */}
-              <div className="pointer-events-auto w-full max-w-[250px] bg-slate-950/95 border-2 border-cyan-400 rounded-3xl p-3.5 shadow-[0_25px_80px_rgba(0,0,0,0.95),0_0_40px_rgba(34,211,238,0.4)] text-white space-y-2 relative backdrop-blur-2xl text-center">
+              <div className="pointer-events-auto w-full max-w-[280px] sm:max-w-[250px] bg-slate-950/95 border-2 border-cyan-400 rounded-3xl p-3.5 shadow-[0_25px_80px_rgba(0,0,0,0.95),0_0_40px_rgba(34,211,238,0.4)] text-white space-y-2 relative backdrop-blur-2xl text-center">
                 
                 <button 
                   onClick={() => { setShowAuthPrompt(false); setEnteredPin(''); }}
@@ -1202,7 +1206,7 @@ export default function SmartFridgeApp() {
                       }}
                       onMouseEnter={() => setIsHoveringButton(true)}
                       onMouseLeave={() => setIsHoveringButton(false)}
-                      className={`h-10 rounded-xl font-mono font-black text-base transition-all active:scale-90 shadow-md flex items-center justify-center border ${
+                      className={`h-11 sm:h-10 rounded-xl font-mono font-black text-lg sm:text-base transition-all active:scale-90 shadow-md flex items-center justify-center border ${
                         btn === 'C'
                           ? 'bg-rose-900/90 hover:bg-rose-800 border-rose-500 text-rose-200 text-xs'
                           : btn === '⌫'

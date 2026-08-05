@@ -176,7 +176,7 @@ export default function BeverageBuilderModal({ initialItem, onSave, onUpdate, on
         <div className="flex-1 grid grid-cols-1 md:grid-cols-12 overflow-hidden min-h-0">
           
           {/* LEFT COLUMN: LIVE 3D WEBGL ROTATING STUDIO (5 COLS) */}
-          <div className="md:col-span-5 bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950 p-4 border-b md:border-b-0 md:border-r border-zinc-800 flex flex-col justify-between relative min-h-[300px] sm:min-h-[420px]">
+          <div className="md:col-span-5 bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950 p-4 border-b md:border-b-0 md:border-r border-zinc-800 flex flex-col justify-between relative min-h-[220px] sm:min-h-[420px]">
             <div className="z-10 bg-black/60 backdrop-blur-md border border-amber-500/40 p-2.5 rounded-xl text-center shadow">
               <span className="text-[10px] text-amber-400 font-black tracking-widest uppercase block animate-pulse">
                 👁️ LIVE 3D ROTATING PREVIEW
