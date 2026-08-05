@@ -16,8 +16,7 @@ export default function LoginView({ onOpenDoor, isOpening }: LoginViewProps) {
   const [showOtherEmployees, setShowOtherEmployees] = useState(false);
 
   const adminUser = users.find(u => u.role === 'superadmin');
-  const defaultUser1 = users.find(u => u.id === 'user-1'); // Ade
-  const otherUsers = users.filter(u => u.role === 'user' && u.id !== 'user-1');
+  const employeeUsers = users.filter(u => u.role === 'user');
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-sky-50 via-slate-100 to-cyan-100 text-slate-900 flex items-center justify-center p-4 lg:p-10 font-sans relative overflow-hidden">
@@ -39,7 +38,7 @@ export default function LoginView({ onOpenDoor, isOpening }: LoginViewProps) {
               SAKUL <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-600 to-cyan-600">SHOWCASE</span>
             </h1>
             <p className="text-slate-600 text-sm font-medium max-w-md leading-relaxed">
-              Selamat datang di kulkas minuman kantor! Ambil minuman berpendingin 2.0°C segar dengan kuota saldo <strong>Rp 70.000/bulan</strong> untuk masing-masing 14 pegawai.
+              Selamat datang di kulkas minuman kantor! Ambil minuman berpendingin 2.0°C segar dengan saldo akun Anda.
             </p>
           </div>
 
@@ -72,34 +71,34 @@ export default function LoginView({ onOpenDoor, isOpening }: LoginViewProps) {
                         <span className="text-[10px] bg-amber-500 text-white px-2.5 py-0.5 rounded-full font-black shadow-sm">PENGELOLA STOK</span>
                       </div>
                       <h3 className="text-slate-900 font-black text-base mt-0.5">{adminUser.name}</h3>
-                      <p className="text-slate-500 text-xs font-medium mt-0.5">Pantau stok barang di showcase & rekap saldo 14 pegawai</p>
+                      <p className="text-slate-500 text-xs font-medium mt-0.5">Kelola stok minuman, rak kulkas & data pegawai</p>
                     </div>
                   </div>
                 </motion.button>
               )}
 
-              {/* User 1 (Ade) Key */}
-              {defaultUser1 && (
+              {/* First Employee quick button if exists */}
+              {employeeUsers[0] && (
                 <motion.button
                   whileHover={{ scale: 1.015, x: 4 }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={() => onOpenDoor(defaultUser1.id)}
+                  onClick={() => onOpenDoor(employeeUsers[0].id)}
                   disabled={isOpening}
                   className="w-full relative overflow-hidden rounded-2xl bg-gradient-to-r from-sky-500/10 via-white to-cyan-50 hover:from-sky-500/20 border-2 border-sky-300/80 p-4 text-left transition-all shadow-md hover:shadow-lg group disabled:opacity-50"
                 >
                   <div className="flex items-center space-x-4">
                     <div className="w-13 h-13 p-3 rounded-2xl bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center text-2xl shadow-md text-white group-hover:scale-110 transition-transform">
-                      🥤
+                      {employeeUsers[0].avatar || '🥤'}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
-                        <span className="text-sky-700 text-xs font-black uppercase tracking-wider">User 1 • Pegawai</span>
+                        <span className="text-sky-700 text-xs font-black uppercase tracking-wider">Pegawai Terdaftar</span>
                         <span className="text-xs bg-sky-600 text-white px-3 py-0.5 rounded-full font-black shadow-sm">
-                          Rp {defaultUser1.currentBalance.toLocaleString('id-ID')}
+                          Rp {employeeUsers[0].currentBalance.toLocaleString('id-ID')}
                         </span>
                       </div>
-                      <h3 className="text-slate-900 font-black text-base mt-0.5">{defaultUser1.name}</h3>
-                      <p className="text-slate-500 text-xs font-medium mt-0.5">Buka kulkas showcase untuk pilih minuman segar</p>
+                      <h3 className="text-slate-900 font-black text-base mt-0.5">{employeeUsers[0].name}</h3>
+                      <p className="text-slate-500 text-xs font-medium mt-0.5">Buka kulkas showcase untuk ambil minuman</p>
                     </div>
                   </div>
                 </motion.button>
@@ -107,43 +106,45 @@ export default function LoginView({ onOpenDoor, isOpening }: LoginViewProps) {
             </div>
 
             {/* Other Employees selection */}
-            <div className="pt-4 border-t border-slate-200">
-              <button
-                onClick={() => setShowOtherEmployees(!showOtherEmployees)}
-                className="w-full text-center text-xs font-bold text-sky-700 hover:text-sky-900 py-2 transition-colors flex items-center justify-center space-x-1.5 bg-sky-50 hover:bg-sky-100 rounded-xl border border-sky-200"
-              >
-                <span>{showOtherEmployees ? '▲ Tutup Daftar Pegawai' : '▼ Login Sebagai Pegawai Lain (Ahdi, Putra, Faiz, dll)'}</span>
-              </button>
+            {employeeUsers.length > 1 && (
+              <div className="pt-4 border-t border-slate-200">
+                <button
+                  onClick={() => setShowOtherEmployees(!showOtherEmployees)}
+                  className="w-full text-center text-xs font-bold text-sky-700 hover:text-sky-900 py-2 transition-colors flex items-center justify-center space-x-1.5 bg-sky-50 hover:bg-sky-100 rounded-xl border border-sky-200"
+                >
+                  <span>{showOtherEmployees ? '▲ Tutup Daftar Pegawai' : `▼ Login Sebagai Pegawai Lain (${employeeUsers.length} Terdaftar)`}</span>
+                </button>
 
-              {showOtherEmployees && (
-                <div className="mt-3 p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3 animate-in fade-in duration-200">
-                  <label className="text-xs text-slate-700 font-black block">Pilih Nama Rekan Kantor:</label>
-                  <div className="flex flex-col sm:flex-row gap-2.5">
-                    <select
-                      value={selectedOtherId}
-                      onChange={(e) => setSelectedOtherId(e.target.value)}
-                      className="flex-1 bg-white border border-slate-300 text-slate-900 text-xs font-bold rounded-xl p-3 focus:outline-none focus:border-sky-500 shadow-inner"
-                    >
-                      <option value="">-- Pilih Nama dari 14 Pegawai --</option>
-                      {otherUsers.map((u) => (
-                        <option key={u.id} value={u.id}>
-                          {u.name} — Sisa Saldo: Rp {u.currentBalance.toLocaleString('id-ID')}
-                        </option>
-                      ))}
-                    </select>
-                    <button
-                      disabled={!selectedOtherId || isOpening}
-                      onClick={() => {
-                        if (selectedOtherId) onOpenDoor(selectedOtherId);
-                      }}
-                      className="px-6 py-3 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 font-extrabold text-xs text-white rounded-xl shadow-md transition-all disabled:opacity-40 shrink-0"
-                    >
-                      Buka Kulkas
-                    </button>
+                {showOtherEmployees && (
+                  <div className="mt-3 p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3 animate-in fade-in duration-200">
+                    <label className="text-xs text-slate-700 font-black block">Pilih Nama Pegawai:</label>
+                    <div className="flex flex-col sm:flex-row gap-2.5">
+                      <select
+                        value={selectedOtherId}
+                        onChange={(e) => setSelectedOtherId(e.target.value)}
+                        className="flex-1 bg-white border border-slate-300 text-slate-900 text-xs font-bold rounded-xl p-3 focus:outline-none focus:border-sky-500 shadow-inner"
+                      >
+                        <option value="">-- Pilih Pegawai --</option>
+                        {employeeUsers.slice(1).map((u) => (
+                          <option key={u.id} value={u.id}>
+                            {u.name} — Sisa Saldo: Rp {u.currentBalance.toLocaleString('id-ID')}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        disabled={!selectedOtherId || isOpening}
+                        onClick={() => {
+                          if (selectedOtherId) onOpenDoor(selectedOtherId);
+                        }}
+                        className="px-6 py-3 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 font-extrabold text-xs text-white rounded-xl shadow-md transition-all disabled:opacity-40 shrink-0"
+                      >
+                        Buka Kulkas
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
 
             <div className="flex items-center justify-between text-[11px] text-slate-500 font-semibold pt-1">
               <span>💡 Kuota gratis: Rp 70.000 / bln</span>

@@ -14,6 +14,7 @@ interface DbUser {
   initial_balance: number;
   current_balance: number;
   avatar: string;
+  pin?: string;
 }
 
 interface DbItem {
@@ -48,6 +49,7 @@ export function mapDbUserToUser(u: DbUser): User {
     initialBalance: Number(u.initial_balance),
     currentBalance: Number(u.current_balance),
     avatar: u.avatar || '😊',
+    pin: u.pin || '123456',
   };
 }
 
@@ -114,6 +116,7 @@ export async function insertUserToDb(user: User): Promise<boolean> {
       initial_balance: user.initialBalance,
       current_balance: user.currentBalance,
       avatar: user.avatar,
+      pin: user.pin || '123456',
     });
     if (error) {
       console.error('Supabase insertUser error:', error.message);
@@ -134,6 +137,7 @@ export async function updateUserInDb(userId: string, updates: Partial<Omit<User,
     if (updates.email !== undefined) dbPayload.email = updates.email;
     if (updates.currentBalance !== undefined) dbPayload.current_balance = updates.currentBalance;
     if (updates.avatar !== undefined) dbPayload.avatar = updates.avatar;
+    if (updates.pin !== undefined) dbPayload.pin = updates.pin;
 
     const { error } = await supabase.from('users').update(dbPayload).eq('id', userId);
     if (error) {
@@ -359,6 +363,7 @@ export async function ensureAdminExistsInDb(): Promise<void> {
       initial_balance: adminUser.initialBalance,
       current_balance: adminUser.currentBalance,
       avatar: adminUser.avatar,
+      pin: adminUser.pin || '123456',
     }, { onConflict: 'id' });
   } catch (err) {
     console.warn('ensureAdminExists exception:', err);

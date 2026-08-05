@@ -251,7 +251,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const addUser = (newUser: Omit<User, 'id'>) => {
     const user: User = {
       ...newUser,
-      id: `user-${Date.now()}`
+      id: `user-${Date.now()}`,
+      pin: newUser.pin || '123456'
     };
     setUsers(prev => [...prev, user]);
     insertUserToDb(user);

@@ -8,6 +8,7 @@ export interface User {
   initialBalance: number;
   currentBalance: number;
   avatar: string;
+  pin?: string;
 }
 
 export type BeverageShape = 'bottle' | 'can' | 'box' | 'yakult';

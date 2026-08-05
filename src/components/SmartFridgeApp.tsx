@@ -242,42 +242,35 @@ export default function SmartFridgeApp() {
   };
 
   const validatePinCode = (pin: string) => {
-    if (pin === '100499') {
-      const ade = users.find(u => u.id === 'user-1' || u.name.toLowerCase().includes('ade')) || users[0];
-      if (ade) {
-        login(ade.id);
-        setShowAuthPrompt(false);
-        setEnteredPin('');
-        setPinError(false);
-        setIsPinVerified(true);
-        setIsDoorUnlocked(false);
+    // Exact PIN lookup against database users
+    const matchedUser = users.find(u => u.pin === pin);
+
+    if (matchedUser) {
+      login(matchedUser.id);
+      setShowAuthPrompt(false);
+      setEnteredPin('');
+      setPinError(false);
+      setIsDoorUnlocked(true);
+      setIsDoorOpen(true);
+
+      if (matchedUser.role === 'superadmin') {
         setToastMessage({
-          text: `🔥 ANJAY KODE SAKTI BENER! TAPI TUNGGU: Sebelum kulkas bisa dibuka, CARI & TEMUKAN DULU "ORANG GANTENG" yang lagi ngintip rahasia di ruangan ini! 👀✨`,
-          type: 'info'
+          text: `👑 Selamat Datang Super Admin! Pintu kulkas terbuka lebar untuk kelola stok & user.`,
+          type: 'success'
         });
-        return;
-      }
-    } else if (pin === '123456') {
-      const admin = users.find(u => u.role === 'superadmin') || users[1];
-      if (admin) {
-        login(admin.id);
-        setShowAuthPrompt(false);
-        setEnteredPin('');
-        setPinError(false);
-        setIsPinVerified(true);
-        setIsDoorUnlocked(false);
+      } else {
         setToastMessage({
-          text: `👑 KODE VVIP BENAR! TAPI TUNGGU: Sebelum kulkas terbuka, CARI & TEMUKAN DULU "ORANG GANTENG" yang lagi ngintip di ruangan ini! 👀🤫`,
-          type: 'info'
+          text: `🟢 PIN DITERIMA! Selamat datang ${matchedUser.name}, saldo Anda: Rp ${matchedUser.currentBalance.toLocaleString('id-ID')}. Pintu kulkas terbuka! 🥤`,
+          type: 'success'
         });
-        return;
       }
+      return;
     }
 
     // Wrong pin!
     setPinError(true);
     setToastMessage({
-      text: '❌ KODE SALAH BOSKU! Alarm kulkas menjerit: "WOOOYY BUKAN KULKAS MOYANG LU! JANGAN ASAL TEBAK PIN!"',
+      text: '❌ PIN SALAH / TIDAK TERDAFTAR! Silakan cek PIN Anda di daftar user atau hubungi Admin.',
       type: 'error'
     });
     setTimeout(() => {
@@ -1169,12 +1162,12 @@ export default function SmartFridgeApp() {
                 </button>
 
                 <div className="text-center pt-0.5 px-1 border-b border-zinc-800/80 pb-2">
-                  <div className="text-[9px] font-mono font-black tracking-widest text-cyan-400 uppercase">🛡️ ANTI-MALING CAMILAN</div>
-                  <div className="text-[13px] font-black text-white leading-tight mt-0.5 tracking-tight">KULKAS DIGEMBOK DUKUN!</div>
+                  <div className="text-[9px] font-mono font-black tracking-widest text-cyan-400 uppercase">🛡️ AKSES KULKAS PINTAR</div>
+                  <div className="text-[13px] font-black text-white leading-tight mt-0.5 tracking-tight">MASUKKAN 6 DIGIT PIN</div>
                 </div>
 
-                <p className="text-[10px] text-zinc-300 font-extrabold leading-tight px-1 italic pt-0.5">
-                  "Ketik 6 digit PIN tanggal lahirmu! Jangan cuma inget deadline & utang pinjol!"
+                <p className="text-[10px] text-zinc-300 font-bold leading-tight px-1 italic pt-0.5">
+                  "Ketik 6 digit PIN akun Anda untuk membuka kulkas & mengambil minuman!"
                 </p>
 
                 {/* 6-Digit Phosphor Display Screen */}
@@ -1371,15 +1364,30 @@ function UserManagementPanel({ users, onAddUser, onUpdateUser, onDeleteUser, onH
   const [editingUser, setEditingUser] = React.useState<UUser | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = React.useState<string | null>(null);
 
-  // Form state: only Nama & Saldo
+  // Form state: Nama, Saldo & Unique 6-Digit PIN
   const [fName, setFName] = React.useState('');
   const [fBalance, setFBalance] = React.useState(70000);
+  const [fPin, setFPin] = React.useState('');
+  const [pinError, setPinError] = React.useState<string | null>(null);
 
   const employeeUsers = users.filter(u => u.role !== 'superadmin');
+
+  // Generator for guaranteed unique 6-digit PIN
+  const generateUniquePin = () => {
+    let newPin = '';
+    let attempts = 0;
+    do {
+      newPin = Math.floor(100000 + Math.random() * 900000).toString();
+      attempts++;
+    } while (users.some(u => u.pin === newPin) && attempts < 200);
+    return newPin;
+  };
 
   const openAdd = () => {
     setFName('');
     setFBalance(70000);
+    setFPin(generateUniquePin());
+    setPinError(null);
     setEditingUser(null);
     setMode('add');
   };
@@ -1387,27 +1395,47 @@ function UserManagementPanel({ users, onAddUser, onUpdateUser, onDeleteUser, onH
   const openEdit = (u: UUser) => {
     setFName(u.name);
     setFBalance(u.currentBalance);
+    setFPin(u.pin || '123456');
+    setPinError(null);
     setEditingUser(u);
     setMode('edit');
   };
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fName.trim()) return;
+    const trimmedName = fName.trim();
+    const trimmedPin = fPin.trim();
+    if (!trimmedName) return;
+
+    // Validate 6 digits
+    if (!/^\d{6}$/.test(trimmedPin)) {
+      setPinError('PIN harus tepat 6 digit angka (contoh: 100499)');
+      return;
+    }
+
+    // Validate unique PIN across all users
+    const duplicateUser = users.find(u => u.pin === trimmedPin && (mode === 'add' || u.id !== editingUser?.id));
+    if (duplicateUser) {
+      setPinError(`❌ PIN "${trimmedPin}" sudah dipakai oleh ${duplicateUser.name}! Setiap user wajib memiliki PIN yang berbeda.`);
+      return;
+    }
+
     if (mode === 'add') {
-      const generatedEmail = `${fName.trim().toLowerCase().replace(/\s+/g, '.')}@kantor.com`;
+      const generatedEmail = `${trimmedName.toLowerCase().replace(/\s+/g, '.')}@kantor.com`;
       onAddUser({
-        name: fName.trim(),
+        name: trimmedName,
         email: generatedEmail,
         role: 'user',
         initialBalance: fBalance,
         currentBalance: fBalance,
         avatar: '😊',
+        pin: trimmedPin,
       });
     } else if (mode === 'edit' && editingUser) {
       onUpdateUser(editingUser.id, {
-        name: fName.trim(),
+        name: trimmedName,
         currentBalance: fBalance,
+        pin: trimmedPin,
       });
     }
     setMode('list');
@@ -1445,26 +1473,27 @@ function UserManagementPanel({ users, onAddUser, onUpdateUser, onDeleteUser, onH
       )}
 
       {mode === 'list' ? (
-        /* ─── USER LIST (HANYA NAMA & SALDO) ─── */
+        /* ─── USER LIST (NAMA, PIN AKSES, SALDO) ─── */
         <div className="flex-1 bg-white border border-slate-300 rounded overflow-y-auto flex flex-col">
           <div className="flex items-center justify-between px-2 py-1 bg-zinc-900 text-white rounded-t sticky top-0 z-10 shrink-0">
-            <strong className="text-amber-400 text-[9px]">👤 Pegawai ({employeeUsers.length})</strong>
+            <strong className="text-amber-400 text-[9px]">👤 Daftar Pegawai ({employeeUsers.length})</strong>
             <button
               onClick={openAdd}
               onMouseEnter={() => onHoverButton(true)}
               onMouseLeave={() => onHoverButton(false)}
               className="px-2 py-0.5 rounded text-[8px] font-black bg-amber-400 text-zinc-950 hover:bg-amber-300 cursor-pointer shadow"
-            >+ Tambah</button>
+            >+ Tambah Pegawai</button>
           </div>
 
           {employeeUsers.length === 0 ? (
-            <p className="p-3 text-center text-slate-400">Belum ada pegawai.</p>
+            <p className="p-3 text-center text-slate-400">Belum ada pegawai terdaftar.</p>
           ) : (
             <div className="flex-1 overflow-y-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-100 text-slate-600 text-[8px] sticky top-0 border-b border-slate-200">
                     <th className="p-1.5">Nama</th>
+                    <th className="p-1.5 text-center">PIN Akses</th>
                     <th className="p-1.5 text-right">Saldo</th>
                   </tr>
                 </thead>
@@ -1474,11 +1503,16 @@ function UserManagementPanel({ users, onAddUser, onUpdateUser, onDeleteUser, onH
                       key={u.id}
                       className="hover:bg-amber-50 cursor-pointer transition-colors"
                       onClick={() => openEdit(u)}
-                      title="Klik untuk edit data atau saldo"
+                      title="Klik untuk edit data, PIN, atau saldo"
                     >
                       <td className="p-1.5 font-black">
                         <span className="mr-1">{u.avatar}</span>
                         <span>{u.name}</span>
+                      </td>
+                      <td className="p-1.5 text-center">
+                        <span className="font-mono bg-zinc-800 text-amber-300 border border-zinc-700 px-1.5 py-0.5 rounded text-[8px] font-black shadow-inner">
+                          🔑 {u.pin || '123456'}
+                        </span>
                       </td>
                       <td className="p-1.5 text-right text-sky-700 font-mono font-black">
                         Rp {(u.currentBalance/1000).toFixed(0)}k
@@ -1491,7 +1525,7 @@ function UserManagementPanel({ users, onAddUser, onUpdateUser, onDeleteUser, onH
           )}
         </div>
       ) : (
-        /* ─── ADD / EDIT FORM (HANYA NAMA & SALDO) ─── */
+        /* ─── ADD / EDIT FORM (NAMA, PIN UNIK, SALDO) ─── */
         <form
           onSubmit={handleSave}
           className="flex-1 bg-zinc-900 border border-amber-400 rounded p-2 space-y-2 overflow-y-auto flex flex-col justify-between"
@@ -1510,19 +1544,65 @@ function UserManagementPanel({ users, onAddUser, onUpdateUser, onDeleteUser, onH
               >✕</button>
             </div>
 
+            {/* Error banner */}
+            {pinError && (
+              <div className="bg-rose-950/90 border border-rose-500 text-rose-200 px-2 py-1 rounded text-[8px] font-bold">
+                {pinError}
+              </div>
+            )}
+
             {/* Field Nama */}
             <div>
               <div className="text-slate-400 text-[8.5px] font-bold mb-0.5">Nama Pegawai *</div>
               <input
                 type="text"
                 value={fName}
-                onChange={e => setFName(e.target.value)}
+                onChange={e => { setFName(e.target.value); setPinError(null); }}
                 placeholder="Masukkan nama pegawai"
                 required
                 className="w-full bg-zinc-800 text-white border border-zinc-600 px-2 py-1.5 rounded text-[9.5px] focus:border-amber-400 outline-none"
                 onFocus={() => onHoverButton(true)}
                 onBlur={() => onHoverButton(false)}
               />
+            </div>
+
+            {/* Field PIN Akses Kulkas (Wajib Unik 6 Digit) */}
+            <div>
+              <div className="flex items-center justify-between mb-0.5">
+                <span className="text-slate-400 text-[8.5px] font-bold">PIN Akses Kulkas (6 Digit Unik) *</span>
+                <button
+                  type="button"
+                  onClick={() => { setFPin(generateUniquePin()); setPinError(null); }}
+                  onMouseEnter={() => onHoverButton(true)}
+                  onMouseLeave={() => onHoverButton(false)}
+                  className="text-[7.5px] font-black text-amber-400 hover:text-amber-300 underline cursor-pointer"
+                >
+                  🎲 Buat PIN Acak
+                </button>
+              </div>
+              <div className="relative">
+                <input
+                  type="text"
+                  maxLength={6}
+                  value={fPin}
+                  onChange={e => {
+                    const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                    setFPin(val);
+                    setPinError(null);
+                  }}
+                  placeholder="Contoh: 100499"
+                  required
+                  className="w-full bg-zinc-800 text-amber-300 font-mono font-black tracking-widest border border-zinc-600 px-2 py-1.5 rounded text-[10px] focus:border-amber-400 outline-none"
+                  onFocus={() => onHoverButton(true)}
+                  onBlur={() => onHoverButton(false)}
+                />
+                <span className="absolute right-2 top-1.5 text-[8px] text-zinc-400 font-mono">
+                  {fPin.length}/6
+                </span>
+              </div>
+              <div className="text-[7.5px] text-zinc-400 mt-0.5">
+                PIN ini digunakan pegawai untuk membuka kulkas langsung pada keypad.
+              </div>
             </div>
 
             {/* Field Saldo */}

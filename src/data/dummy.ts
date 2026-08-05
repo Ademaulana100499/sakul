@@ -8,7 +8,8 @@ export const INITIAL_USERS: User[] = [
     role: 'superadmin',
     initialBalance: 0,
     currentBalance: 0,
-    avatar: '👨‍💼'
+    avatar: '👨‍💼',
+    pin: '123456'
   }
 ];
 
